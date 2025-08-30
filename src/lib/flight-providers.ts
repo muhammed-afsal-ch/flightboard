@@ -582,6 +582,173 @@ export class AdsbImProvider implements FlightDataProvider {
 }
 
 // ============================================================================
+// ADSB.LOL PROVIDER (No API key required - uses geographic search)
+// ============================================================================
+export class AdsbLolProvider implements FlightDataProvider {
+  private baseUrl = 'https://api.adsb.lol';
+
+  async fetchFlights(airport: string, type: 'departure' | 'arrival'): Promise<Flight[]> {
+    try {
+      // Get airport coordinates
+      const coords = await this.getAirportCoordinates(airport);
+      if (!coords) {
+        console.error('adsb.lol: Cannot fetch flights without airport coordinates');
+        return [];
+      }
+
+      // Fetch aircraft within 50nm radius of airport
+      const radius = 50; // nautical miles
+      const response = await fetch(
+        `${this.baseUrl}/v2/lat/${coords.latitude}/lon/${coords.longitude}/dist/${radius}`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'FlightBoard/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`adsb.lol API error: ${response.statusText}`);
+      }
+
+      const data: any = await response.json();
+      const aircraft = data.ac || [];
+      
+      // Transform aircraft data to flights
+      const flights: Flight[] = [];
+      for (const ac of aircraft) {
+        const flight = this.transformAdsbLolData(ac, type, airport);
+        if (flight) {
+          flights.push(flight);
+        }
+        
+        // Limit results
+        if (flights.length >= 20) break;
+      }
+
+      return flights;
+    } catch (error) {
+      console.error('adsb.lol API error:', error);
+      return [];
+    }
+  }
+
+  private transformAdsbLolData(aircraft: any, type: 'departure' | 'arrival', airport: string): Flight | null {
+    // Filter based on altitude and ground speed to determine if arriving/departing
+    const isLowAltitude = aircraft.alt_baro < 10000; // feet
+    const hasCallsign = aircraft.flight && aircraft.flight.trim();
+    
+    if (!hasCallsign || !isLowAltitude) return null;
+
+    // Estimate if departing or arriving based on altitude trend
+    // This is a simplified heuristic - real implementation would need more data
+    const isDeparting = aircraft.baro_rate > 100; // climbing
+    const isArriving = aircraft.baro_rate < -100; // descending
+    
+    if (type === 'departure' && !isDeparting) return null;
+    if (type === 'arrival' && !isArriving) return null;
+
+    const callsign = aircraft.flight.trim();
+    
+    return {
+      id: `${aircraft.hex}-${Date.now()}`,
+      flightNumber: callsign,
+      airline: this.extractAirlineFromCallsign(callsign),
+      destination: type === 'departure' ? 'En Route' : airport,
+      destinationCode: type === 'departure' ? 'ENR' : airport,
+      origin: type === 'arrival' ? 'En Route' : airport,
+      originCode: type === 'arrival' ? 'ENR' : airport,
+      scheduledTime: new Date(),
+      estimatedTime: undefined,
+      actualTime: undefined,
+      gate: 'N/A',
+      terminal: undefined,
+      status: this.determineStatus(aircraft, type),
+      aircraft: aircraft.t || 'Unknown',
+      registration: aircraft.r,
+      altitude: aircraft.alt_baro,
+      groundSpeed: aircraft.gs,
+      track: aircraft.track,
+      latitude: aircraft.lat,
+      longitude: aircraft.lon
+    };
+  }
+
+  private determineStatus(aircraft: any, type: 'departure' | 'arrival'): FlightStatus {
+    const altitude = aircraft.alt_baro || 0;
+    const groundSpeed = aircraft.gs || 0;
+    const verticalRate = aircraft.baro_rate || 0;
+    
+    if (type === 'departure') {
+      if (altitude < 500 && groundSpeed < 50) return 'boarding';
+      if (altitude < 5000 && verticalRate > 100) return 'departed';
+      return 'departed';
+    } else {
+      if (altitude < 5000 && verticalRate < -100) return 'on-time';
+      if (altitude < 500 && groundSpeed < 50) return 'landed';
+      return 'on-time';
+    }
+  }
+
+  private extractAirlineFromCallsign(callsign: string): string {
+    const airlineMap: Record<string, string> = {
+      'UAL': 'United Airlines',
+      'AAL': 'American Airlines',
+      'DAL': 'Delta Air Lines',
+      'SWA': 'Southwest Airlines',
+      'ASA': 'Alaska Airlines',
+      'JBU': 'JetBlue Airways',
+      'NKS': 'Spirit Airlines',
+      'FFT': 'Frontier Airlines',
+      'SKW': 'SkyWest Airlines',
+      'FDX': 'FedEx',
+      'UPS': 'UPS Airlines'
+    };
+    
+    const prefix = callsign.substring(0, 3);
+    return airlineMap[prefix] || callsign.substring(0, 3);
+  }
+
+  private async getAirportCoordinates(airport: string): Promise<{ latitude: number, longitude: number } | null> {
+    try {
+      const { fetchAirportCoordinates } = await import('./airport-coords');
+      return await fetchAirportCoordinates(airport);
+    } catch (error) {
+      console.error('Error fetching airport coordinates:', error);
+      return null;
+    }
+  }
+
+  async fetchAirportInfo(code: string): Promise<Airport | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/0/airport/${code}`, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'FlightBoard/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data: any = await response.json();
+      return {
+        code: code,
+        name: data.name,
+        city: data.city,
+        country: data.country,
+        timezone: data.timezone
+      };
+    } catch (error) {
+      console.error('adsb.lol airport info error:', error);
+      return null;
+    }
+  }
+}
+
+// ============================================================================
 // PROVIDER FACTORY WITH PRIORITY SYSTEM
 // ============================================================================
 export function getConfiguredProviders(): FlightDataProvider[] {
@@ -595,6 +762,7 @@ export function getConfiguredProviders(): FlightDataProvider[] {
     'flightradar24',
     'airnav',
     'adsbim',
+    'adsblol',
     'opensky'
   ];
 
@@ -618,6 +786,10 @@ export function getConfiguredProviders(): FlightDataProvider[] {
     'adsbim': () => {
       // No API key required for adsb.im
       return new AdsbImProvider();
+    },
+    'adsblol': () => {
+      // No API key required for adsb.lol
+      return new AdsbLolProvider();
     },
     'aviationstack': () => {
       // Import from existing file

@@ -23,6 +23,7 @@ import {
   FlightRadar24Provider,
   AirNavProvider,
   AdsbImProvider,
+  AdsbLolProvider,
   AggregatedFlightProvider,
   getConfiguredProviders
 } from '../lib/flight-providers';
@@ -72,6 +73,7 @@ program
       flightradar24: process.env.FLIGHTRADAR24_API_KEY ? new FlightRadar24Provider(process.env.FLIGHTRADAR24_API_KEY) : null,
       airnav: process.env.AIRNAV_API_KEY ? new AirNavProvider(process.env.AIRNAV_API_KEY) : null,
       adsbim: new AdsbImProvider(),
+      adsblol: new AdsbLolProvider(),
       aviationstack: process.env.AVIATIONSTACK_API_KEY ? new AviationStackProvider() : null,
       opensky: new OpenSkyProvider()
     };
@@ -169,100 +171,200 @@ program
     checkProvider('AirNav RadarBox', process.env.AIRNAV_API_KEY);
     checkProvider('Aviation Edge', process.env.AVIATION_EDGE_API_KEY);
     console.log(chalk.green('✓'), chalk.white('adsb.im'), chalk.gray('(No key required)'));
+    console.log(chalk.green('✓'), chalk.white('adsb.lol'), chalk.gray('(No key required)'));
     console.log(chalk.green('✓'), chalk.white('OpenSky Network'), chalk.gray('(No key required)'));
     
     console.log(chalk.cyan('\nPriority order:'), process.env.FLIGHT_PROVIDER_PRIORITY || 'default');
   });
 
-// Flight routes lookup via adsb.im
+// Flight routes lookup via adsb.im or adsb.lol
 program
   .command('routes')
-  .description('Fetch flight route information from adsb.im')
+  .description('Fetch flight route information from adsb.im or adsb.lol')
   .requiredOption('--flight <callsign>', 'Flight callsign (e.g., UAL123, AAL456)')
   .option('--lat <latitude>', 'Current latitude (default: 0)', '0')
   .option('--lng <longitude>', 'Current longitude (default: 0)', '0')
+  .option('--provider <provider>', 'Provider to use (adsbim, adsblol, or all)', 'all')
   .option('-v, --verbose', 'Show full response data')
   .action(async (options) => {
-    console.log(chalk.yellow.bold(`Fetching route for flight ${options.flight}...`));
+    const providerOption = options.provider.toLowerCase();
     
-    const url = 'https://adsb.im/api/0/routeset';
-    const requestBody = {
-      callsign: options.flight.toUpperCase(),
-      lat: parseFloat(options.lat),
-      lng: parseFloat(options.lng)
-    };
+    // Define route providers
+    const routeProviders = ['adsbim', 'adsblol'];
+    const providersToCheck = providerOption === 'all' ? routeProviders : [providerOption];
     
-    // Show full request details if verbose
-    if (options.verbose) {
-      console.log(chalk.cyan('\nFull Request:'));
-      console.log(chalk.white('  URL:'), url);
-      console.log(chalk.white('  Method:'), 'POST');
-      console.log(chalk.white('  Headers:'));
-      console.log(chalk.gray('    Content-Type: application/json'));
-      console.log(chalk.gray('    Accept: application/json'));
-      console.log(chalk.gray('    User-Agent: FlightBoard/1.0'));
-      console.log(chalk.white('  Body:'));
-      console.log(chalk.gray(JSON.stringify(requestBody, null, 2).split('\n').map(line => '    ' + line).join('\n')));
+    if (!['all', ...routeProviders].includes(providerOption)) {
+      console.error(chalk.red(`Invalid provider: ${providerOption}`));
+      console.log(chalk.gray(`Available: ${routeProviders.join(', ')}, all`));
+      process.exit(1);
     }
     
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': 'FlightBoard/1.0'
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      printResult(response.ok, `Response status: ${response.status}`);
+    console.log(chalk.yellow.bold(`Fetching route for flight ${options.flight}...`));
+    
+    // Try each provider
+    for (const provider of providersToCheck) {
+      console.log(chalk.cyan(`\nTrying ${provider}...`));
       
-      if (response.ok) {
-        const data = await response.json();
+      let url: string;
+      let requestBody: any;
+      
+      if (provider === 'adsblol') {
+        url = 'https://api.adsb.lol/api/0/routeset';
+        // adsb.lol expects a PlaneList object with an array of plane instances
+        requestBody = {
+          planes: [{
+            callsign: options.flight.toUpperCase(),
+            lat: parseFloat(options.lat),
+            lng: parseFloat(options.lng)
+          }]
+        };
+      } else {
+        url = 'https://adsb.im/api/0/routeset';
+        requestBody = {
+          callsign: options.flight.toUpperCase(),
+          lat: parseFloat(options.lat),
+          lng: parseFloat(options.lng)
+        };
+      }
+      
+      // Show full request details if verbose
+      if (options.verbose) {
+        console.log(chalk.cyan('Full Request:'));
+        console.log(chalk.white('  URL:'), url);
+        console.log(chalk.white('  Method:'), 'POST');
+        console.log(chalk.white('  Headers:'));
+        console.log(chalk.gray('    Content-Type: application/json'));
+        console.log(chalk.gray('    Accept: application/json'));
+        console.log(chalk.gray('    User-Agent: FlightBoard/1.0'));
+        console.log(chalk.white('  Body:'));
+        console.log(chalk.gray(JSON.stringify(requestBody, null, 2).split('\n').map(line => '    ' + line).join('\n')));
+      }
+      
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'FlightBoard/1.0'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        printResult(response.ok, `${provider}: Response status: ${response.status}`);
         
-        if (data && typeof data === 'object') {
-          // Check if we got route data
-          if (data.route) {
-            console.log(chalk.cyan('\nRoute Information:'));
-            console.log(chalk.white('  Origin:'), data.route.origin || 'Unknown');
-            console.log(chalk.white('  Destination:'), data.route.destination || 'Unknown');
-            
-            if (data.route.waypoints && Array.isArray(data.route.waypoints)) {
-              console.log(chalk.white('  Waypoints:'), data.route.waypoints.length);
+        if (response.ok) {
+          const data = await response.json();
+          let foundData = false;
+          
+          // Handle adsb.lol response (returns array with different format)
+          if (provider === 'adsblol' && Array.isArray(data)) {
+            if (data.length > 0) {
+              foundData = true;
+              const routeData = data[0]; // Get first result
+              if (routeData && typeof routeData === 'object') {
+                // Display flight information
+                console.log(chalk.cyan('\nFlight Information:'));
+                console.log(chalk.white('  Callsign:'), routeData.callsign || options.flight);
+                console.log(chalk.white('  Airline Code:'), routeData.airline_code || 'Unknown');
+                console.log(chalk.white('  Flight Number:'), routeData.number || 'Unknown');
+                
+                // Display route information
+                if (routeData.airport_codes || routeData._airport_codes_iata) {
+                  console.log(chalk.cyan('\nRoute Information:'));
+                  console.log(chalk.white('  Route (ICAO):'), routeData.airport_codes || 'Unknown');
+                  console.log(chalk.white('  Route (IATA):'), routeData._airport_codes_iata || 'Unknown');
+                }
+                
+                // Display airport details
+                if (routeData._airports && Array.isArray(routeData._airports) && routeData._airports.length >= 2) {
+                  const origin = routeData._airports[0];
+                  const destination = routeData._airports[1];
+                  
+                  console.log(chalk.cyan('\nOrigin Airport:'));
+                  console.log(chalk.white('  Name:'), origin.name || 'Unknown');
+                  console.log(chalk.white('  Location:'), origin.location || 'Unknown');
+                  console.log(chalk.white('  ICAO/IATA:'), `${origin.icao}/${origin.iata}` || 'Unknown');
+                  console.log(chalk.white('  Coordinates:'), `${origin.lat}, ${origin.lon}` || 'Unknown');
+                  
+                  console.log(chalk.cyan('\nDestination Airport:'));
+                  console.log(chalk.white('  Name:'), destination.name || 'Unknown');
+                  console.log(chalk.white('  Location:'), destination.location || 'Unknown');
+                  console.log(chalk.white('  ICAO/IATA:'), `${destination.icao}/${destination.iata}` || 'Unknown');
+                  console.log(chalk.white('  Coordinates:'), `${destination.lat}, ${destination.lon}` || 'Unknown');
+                }
+                
+                // Show full response if verbose
+                if (options.verbose && providerOption !== 'all') {
+                  printJson(data, 'Full Response');
+                }
+              }
+            } else {
+              console.log(chalk.yellow(`${provider}: No route information found`));
+            }
+          }
+          // Handle adsb.im response (returns object)
+          else if (provider === 'adsbim' && data && typeof data === 'object') {
+            // Check if we have any route data
+            if (data.route || data.aircraft || data.flight) {
+              foundData = true;
+              
+              // Check if we got route data
+              if (data.route) {
+                console.log(chalk.cyan('\nRoute Information:'));
+                console.log(chalk.white('  Origin:'), data.route.origin || 'Unknown');
+                console.log(chalk.white('  Destination:'), data.route.destination || 'Unknown');
+                
+                if (data.route.waypoints && Array.isArray(data.route.waypoints)) {
+                  console.log(chalk.white('  Waypoints:'), data.route.waypoints.length);
+                }
+              }
+              
+              // Check if we got aircraft info
+              if (data.aircraft) {
+                console.log(chalk.cyan('\nAircraft Information:'));
+                console.log(chalk.white('  Type:'), data.aircraft.type || 'Unknown');
+                console.log(chalk.white('  Registration:'), data.aircraft.registration || 'Unknown');
+              }
+              
+              // Check if we got flight info
+              if (data.flight) {
+                console.log(chalk.cyan('\nFlight Information:'));
+                console.log(chalk.white('  Airline:'), data.flight.airline || 'Unknown');
+                console.log(chalk.white('  Flight Number:'), data.flight.number || options.flight);
+                console.log(chalk.white('  Status:'), data.flight.status || 'Unknown');
+              }
+              
+              // Show full response if verbose
+              if (options.verbose && providerOption !== 'all') {
+                printJson(data, 'Full Response');
+              }
+            } else if (Array.isArray(data) && data.length === 0) {
+              console.log(chalk.yellow(`${provider}: No route information found`));
+            } else {
+              console.log(chalk.yellow(`${provider}: No route information found`));
+              if (options.verbose) {
+                printJson(data, 'Response Data');
+              }
             }
           }
           
-          // Check if we got aircraft info
-          if (data.aircraft) {
-            console.log(chalk.cyan('\nAircraft Information:'));
-            console.log(chalk.white('  Type:'), data.aircraft.type || 'Unknown');
-            console.log(chalk.white('  Registration:'), data.aircraft.registration || 'Unknown');
+          // If we found data and checking all providers, we can stop here unless verbose
+          if (foundData && providerOption === 'all' && !options.verbose) {
+            console.log(chalk.green(`\n✓ Found route information from ${provider}`));
+            break;
           }
-          
-          // Check if we got flight info
-          if (data.flight) {
-            console.log(chalk.cyan('\nFlight Information:'));
-            console.log(chalk.white('  Airline:'), data.flight.airline || 'Unknown');
-            console.log(chalk.white('  Flight Number:'), data.flight.number || options.flight);
-            console.log(chalk.white('  Status:'), data.flight.status || 'Unknown');
-          }
-          
-          // Show full response if verbose
-          if (process.env.VERBOSE || options.verbose) {
-            printJson(data, 'Full Response');
-          }
-        } else if (Array.isArray(data) && data.length === 0) {
-          console.log(chalk.yellow('No route information found for this flight'));
         } else {
-          printJson(data, 'Response Data');
+          const text = await response.text();
+          if (options.verbose) {
+            console.log(chalk.red(`${provider} error response:`), text);
+          } else {
+            console.log(chalk.red(`${provider}: Failed to fetch route information`));
+          }
         }
-      } else {
-        const text = await response.text();
-        console.log(chalk.red('Error response:'), text);
+      } catch (error: any) {
+        console.error(chalk.red(`${provider} error:`), error.message);
       }
-    } catch (error) {
-      console.error(chalk.red('Error:'), error);
     }
   });
 

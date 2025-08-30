@@ -4,6 +4,10 @@ A dual-interface flight information display system featuring both a modern web U
 
 ## 🚀 Recent Updates
 
+- **Multi-Provider Routes**: Routes command now checks all providers by default, stops on first success
+- **adsb.lol Routes Support**: Routes command now supports both adsb.im and adsb.lol providers
+- **adsb.lol Provider**: Added new free provider for real-time ADS-B data with geographic search
+- **Verbose Request Logging**: Routes command now shows full request details with `-v` flag
 - **Flight Route Lookup**: New `routes` command in `flightboard-lookup` for querying adsb.im
 - **Global CLI Tools**: All commands now installable globally via `npm link`
 - **Renamed Commands**: More intuitive names (`flightboard-web`, `flightboard-tui`, `flightboard-lookup`)
@@ -16,7 +20,7 @@ A dual-interface flight information display system featuring both a modern web U
 - **Web Interface**: Modern Next.js application with photorealistic split-flap display animations
 - **Terminal UI**: Blessed-based TUI for command-line flight monitoring
 - **Real-time Updates**: Auto-refreshing flight data with status changes
-- **Multiple Data Providers**: Support for 7+ flight data APIs
+- **Multiple Data Providers**: Support for 8+ flight data APIs
 - **Airport Information**: Detailed airport data including location and timezone
 - **Global CLI Tools**: Installable command-line utilities for flight lookups
 
@@ -92,16 +96,19 @@ flightboard-lookup flights --airport=KLAX --provider=aviationstack
 # Get airport information
 flightboard-lookup airport --code=KSFO
 
-# Fetch flight route information via adsb.im
-flightboard-lookup routes --flight UAL123                                      # Basic query
-flightboard-lookup routes --flight AAL456 --lat 37.7749 --lng -122.4194       # With position
-flightboard-lookup routes --flight SWA1234 --verbose                          # Show full JSON response
+# Fetch flight route information via adsb.im or adsb.lol
+flightboard-lookup routes --flight UAL123                                      # Check all providers (default)
+flightboard-lookup routes --flight AAL456 --provider adsbim                   # Use only adsb.im
+flightboard-lookup routes --flight DAL789 --provider adsblol                  # Use only adsb.lol
+flightboard-lookup routes --flight SWA1234 --lat 37.7749 --lng -122.4194      # With position data
+flightboard-lookup routes --flight NKS246 --verbose                           # Show full details from all providers
 
 # Routes command options:
 #   --flight <callsign>  Flight callsign (required)
 #   --lat <latitude>     Current latitude (optional, default: 0)
 #   --lng <longitude>    Current longitude (optional, default: 0)
-#   --verbose, -v        Show full response data
+#   --provider <provider> Provider to use: adsbim, adsblol, or all (default: all)
+#   --verbose, -v        Show full response data including request details
 
 # Make raw API request
 flightboard-lookup raw --url "https://api.example.com/endpoint" --method GET
@@ -114,7 +121,7 @@ flightboard-lookup --help
 - `flights`: Test flight data providers for an airport
 - `airport`: Get detailed airport information
 - `list`: Show all configured providers and their status
-- `routes`: Query adsb.im for flight route information (requires active flight callsign)
+- `routes`: Query adsb.im or adsb.lol for flight route information (requires active flight callsign)
 - `raw`: Make custom API requests for testing
 
 ## API Configuration
@@ -158,7 +165,17 @@ cp env.example .env.local
    - Returns route information for active flights
    - Use `flightboard-lookup routes` command for testing
 
-7. **OpenSky Network** (Free)
+7. **adsb.lol** (Free)
+   - Real-time ADS-B data with geographic search
+   - No API key required
+   - Endpoints:
+     - `/v2/lat/{lat}/lon/{lon}/dist/{radius}` - Search aircraft by location
+     - `/api/0/routeset` - Look up flight routes (similar to adsb.im)
+     - `/api/0/airport/{icao}` - Airport information
+   - Max radius: 250 nautical miles for geographic search
+   - Use `flightboard-lookup routes --provider adsblol` for route testing
+
+8. **OpenSky Network** (Free)
    - No configuration needed
    - Rate limits apply
 
@@ -168,10 +185,10 @@ Set the order in which providers are tried:
 
 ```bash
 # In .env.local
-FLIGHT_PROVIDER_PRIORITY=airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,opensky
+FLIGHT_PROVIDER_PRIORITY=airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,adsblol,opensky
 
 # Default if not specified:
-# airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,opensky
+# airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,adsblol,opensky
 ```
 
 The app will automatically try providers in the specified order until it finds available data. If all providers fail, it falls back to simulated mock data.
@@ -180,7 +197,7 @@ The app will automatically try providers in the specified order until it finds a
 
 - **Disabled Providers**: If a provider doesn't appear in `FLIGHT_PROVIDER_PRIORITY`, it's disabled
 - **API Keys**: Only required for commercial providers
-- **Free Providers**: adsb.im and OpenSky work without configuration
+- **Free Providers**: adsb.im, adsb.lol, and OpenSky work without configuration
 - **Mock Data**: Automatically used when no providers return data
 
 ## Airport Information
