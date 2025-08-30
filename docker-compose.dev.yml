@@ -2,12 +2,12 @@ version: '3.8'
 
 services:
   flightboard-web:
-    # Use the published image from GHCR
-    image: ghcr.io/airframes/flightboard:latest
-    # Or build locally (uncomment the lines below and comment out the image line above)
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    # Build from local source for development
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
     ports:
       - "3000:3000"
     environment:
@@ -21,6 +21,10 @@ services:
       - FLIGHTRADAR24_API_KEY=${FLIGHTRADAR24_API_KEY}
       - AIRNAV_API_KEY=${AIRNAV_API_KEY}
       - AVIATION_EDGE_API_KEY=${AVIATION_EDGE_API_KEY}
+    volumes:
+      # Mount source code for development (optional, for hot-reload if configured)
+      - ./src:/app/src:ro
+      - ./public:/app/public:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
