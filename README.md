@@ -1,7 +1,8 @@
 # FlightBoard
 
 ![CI](https://github.com/airframes/flightboard/workflows/CI/badge.svg)
-![Docker](https://img.shields.io/badge/docker-ready-blue)
+![Docker Publish](https://github.com/airframes/flightboard/workflows/Docker%20Publish/badge.svg)
+![Docker Image](https://ghcr-badge.egpl.dev/airframes/flightboard/latest_tag?label=docker%20image)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 ![TypeScript](https://img.shields.io/badge/typescript-%5E5.0.0-blue)
 ![Next.js](https://img.shields.io/badge/next.js-15.5.2-black)
@@ -11,29 +12,30 @@ A dual-interface flight information display system featuring both a modern web U
 
 ## 🚀 Recent Updates
 
-- **Automatic Route Enrichment**: Flights missing airport details are automatically enriched with route data
-- **Docker Support**: Complete containerization with Dockerfile and docker-compose
-- **CI/CD Pipeline**: GitHub Actions workflow for linting, testing, and Docker builds
-- **Multi-Provider Routes**: Routes command now checks all providers by default, stops on first success
-- **adsb.lol Routes Support**: Routes command now supports both adsb.im and adsb.lol providers
-- **adsb.lol Provider**: Added new free provider for real-time ADS-B data with geographic search
-- **Verbose Request Logging**: Routes command now shows full request details with `-v` flag
-- **Flight Route Lookup**: New `routes` command in `flightboard-lookup` for querying adsb.im
-- **Global CLI Tools**: All commands now installable globally via `npm link`
-- **TypeScript CLI**: Commands run directly from TypeScript source with tsx
+- **Production Ready**: Fixed all TypeScript compilation errors for successful Docker builds
+- **Automatic Route Enrichment**: Flights missing airport details are automatically enriched with route data from adsb.im/adsb.lol
+- **Complete Docker Support**: Multi-stage Dockerfile with optimized production builds and docker-compose configuration
+- **CI/CD Pipeline**: Dual GitHub Actions workflows for CI testing and automatic Docker publishing to GHCR
+- **Multi-Provider Route Checking**: Routes command intelligently checks all providers, stops on first success
+- **Enhanced adsb.lol Integration**: Full support for route lookup endpoint matching adsb.im API
+- **TypeScript Improvements**: Resolved all type safety issues for production builds
+- **Standalone Next.js Output**: Optimized Docker images using Next.js standalone mode
+- **Multi-Platform Docker Images**: Automated builds for amd64 and arm64 architectures
+- **Automatic GitHub Releases**: Version tags trigger Docker builds and create releases
 
 ## Features
 
-- **Web Interface**: Modern Next.js application with photorealistic split-flap display animations
+- **Web Interface**: Modern Next.js 15 application with photorealistic split-flap display animations
 - **Terminal UI**: Blessed-based TUI for command-line flight monitoring
-- **Real-time Updates**: Auto-refreshing flight data with status changes
-- **Multiple Data Providers**: Support for 8+ flight data APIs
+- **Real-time Updates**: Auto-refreshing flight data with dynamic status changes
+- **Multiple Data Providers**: Support for 8+ flight data APIs with intelligent fallback
 - **Automatic Route Enrichment**: Missing flight details are automatically fetched from route providers
-- **Airport Information**: Detailed airport data including location and timezone
-- **Global CLI Tools**: Installable command-line utilities for flight lookups
-- **Docker Support**: Complete containerization for easy deployment
-- **CI/CD Pipeline**: Automated testing and validation with GitHub Actions
-- **Multi-Provider Routes**: Intelligent route lookup across multiple data sources
+- **Airport Information**: Detailed airport data including location, timezone, and local time
+- **Global CLI Tools**: Three installable command-line utilities for different use cases
+- **Production Docker Support**: Multi-stage builds with Next.js standalone output
+- **Complete CI/CD Pipeline**: Automated testing, Docker builds, and GHCR publishing
+- **Smart Provider Selection**: Configurable priority system with automatic fallback
+- **TypeScript Throughout**: Full type safety in both web and CLI applications
 
 ## Requirements
 
@@ -58,6 +60,21 @@ npm link
 ```
 
 ### Using Docker
+
+#### Pull from GitHub Container Registry
+
+```bash
+# Pull the latest stable version
+docker pull ghcr.io/airframes/flightboard:latest
+
+# Or pull a specific version
+docker pull ghcr.io/airframes/flightboard:v1.0.0
+
+# Run the container
+docker run -p 3000:3000 --env-file .env.local ghcr.io/airframes/flightboard:latest
+```
+
+#### Build Locally
 
 ```bash
 # Using Docker Compose (recommended)
@@ -317,12 +334,40 @@ FlightBoard includes a comprehensive GitHub Actions workflow for continuous inte
 - **Automated Testing**: Executes test suite on every PR and push
 - **Docker Validation**: Builds Docker image to ensure containerization works
 - **Pull Request Checks**: Automatically runs on all pull requests
+- **Automatic Docker Publishing**: Tags trigger multi-platform image builds
+- **GitHub Container Registry**: Images published to ghcr.io/airframes/flightboard
+- **Release Automation**: Version tags create GitHub releases with changelogs
 
-### GitHub Actions Workflow
+### GitHub Actions Workflows
 
-The CI pipeline runs automatically on:
-- All pull requests
-- Pushes to `main` and `develop` branches
+The project includes two main workflows:
+
+1. **CI Pipeline** (`ci.yml`)
+   - Runs on all pull requests
+   - Pushes to `main` and `develop` branches
+   - Tests on Node.js 18.x and 20.x
+   - Validates Docker builds
+
+2. **Docker Publish** (`docker-publish.yml`)
+   - Triggers on version tags (e.g., `v1.0.0`)
+   - Builds multi-platform images (amd64, arm64)
+   - Publishes to GitHub Container Registry
+   - Creates GitHub releases automatically
+
+### Creating a Release
+
+To create a new release:
+
+```bash
+# Tag the version
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This will automatically:
+- Build and publish Docker images to GHCR
+- Create a GitHub release
+- Tag images with version numbers and `latest`
 
 ## Project Structure
 
@@ -397,8 +442,28 @@ npm link
 
 MIT License - see [LICENSE](LICENSE) file for details
 
+## Troubleshooting
+
+### Docker Build Issues
+If you encounter TypeScript compilation errors during Docker builds:
+1. Ensure all TypeScript types are properly defined
+2. Check that `next.config.ts` only contains valid Next.js configuration options
+3. Verify that all imported modules exist and are properly typed
+
+### Provider Connection Issues
+- Check API keys are correctly set in `.env.local`
+- Verify network connectivity to provider endpoints
+- Review provider-specific rate limits
+- Use `flightboard-lookup` to test individual providers
+
+### Port Conflicts
+If the default port 3000 is in use:
+- Change the port in Docker: `docker run -p 3001:3000 ...`
+- For development: `PORT=3001 npm run dev`
+
 ## Acknowledgments
 
 - Airport data provided by [Airframes.io](https://airframes.io)
-- Community ADS-B data from various open sources
+- Community ADS-B data from adsb.im and adsb.lol
+- Flight data from various commercial and open-source providers
 - UI inspiration from classic airport split-flap displays
