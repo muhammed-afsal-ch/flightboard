@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  flightboard-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Flight Provider Configuration
+      - FLIGHT_PROVIDER_PRIORITY=${FLIGHT_PROVIDER_PRIORITY:-airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,adsblol,opensky}
+      
+      # API Keys (set these in your .env file or environment)
+      - AIRFRAMES_API_KEY=${AIRFRAMES_API_KEY}
+      - FLIGHTAWARE_API_KEY=${FLIGHTAWARE_API_KEY}
+      - AVIATIONSTACK_API_KEY=${AVIATIONSTACK_API_KEY}
+      - FLIGHTRADAR24_API_KEY=${FLIGHTRADAR24_API_KEY}
+      - AIRNAV_API_KEY=${AIRNAV_API_KEY}
+      - AVIATION_EDGE_API_KEY=${AVIATION_EDGE_API_KEY}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

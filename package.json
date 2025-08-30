@@ -14,7 +14,11 @@
     "start": "next start",
     "flightboard-web": "next dev --turbopack",
     "flightboard-tui": "tsx src/cli/tui.ts",
-    "flightboard-lookup": "tsx src/cli/lookup.ts"
+    "flightboard-lookup": "tsx src/cli/lookup.ts",
+    "docker:build": "docker build -t flightboard:latest .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env.local flightboard:latest",
+    "docker:compose": "docker-compose up",
+    "docker:compose:build": "docker-compose up --build"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
