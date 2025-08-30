@@ -2,6 +2,15 @@
 
 A dual-interface flight information display system featuring both a modern web UI and a terminal-based TUI, similar to airport departure/arrival boards.
 
+## 🚀 Recent Updates
+
+- **Flight Route Lookup**: New `routes` command in `flightboard-lookup` for querying adsb.im
+- **Global CLI Tools**: All commands now installable globally via `npm link`
+- **Renamed Commands**: More intuitive names (`flightboard-web`, `flightboard-tui`, `flightboard-lookup`)
+- **adsb.im Integration**: Added support for flight route data via adsb.im API
+- **TypeScript CLI**: Commands run directly from TypeScript source with tsx
+- **Environment Configuration**: Simplified with `env.example` file
+
 ## Features
 
 - **Web Interface**: Modern Next.js application with photorealistic split-flap display animations
@@ -83,12 +92,30 @@ flightboard-lookup flights --airport=KLAX --provider=aviationstack
 # Get airport information
 flightboard-lookup airport --code=KSFO
 
+# Fetch flight route information via adsb.im
+flightboard-lookup routes --flight UAL123                                      # Basic query
+flightboard-lookup routes --flight AAL456 --lat 37.7749 --lng -122.4194       # With position
+flightboard-lookup routes --flight SWA1234 --verbose                          # Show full JSON response
+
+# Routes command options:
+#   --flight <callsign>  Flight callsign (required)
+#   --lat <latitude>     Current latitude (optional, default: 0)
+#   --lng <longitude>    Current longitude (optional, default: 0)
+#   --verbose, -v        Show full response data
+
 # Make raw API request
 flightboard-lookup raw --url "https://api.example.com/endpoint" --method GET
 
 # Help
 flightboard-lookup --help
 ```
+
+**Available Commands:**
+- `flights`: Test flight data providers for an airport
+- `airport`: Get detailed airport information
+- `list`: Show all configured providers and their status
+- `routes`: Query adsb.im for flight route information (requires active flight callsign)
+- `raw`: Make custom API requests for testing
 
 ## API Configuration
 
@@ -124,9 +151,12 @@ cp env.example .env.local
    - `AIRNAV_API_KEY=your_key`
 
 6. **adsb.im** (Free)
-   - Flight schedule lookup by callsign and position
+   - Flight schedule and route lookup by callsign and position
    - No API key required
-   - Uses POST to `/api/0/routeset` with callsign, lat, lng
+   - Endpoint: `POST /api/0/routeset`
+   - Parameters: `callsign` (required), `lat`, `lng` (optional, defaults to 0)
+   - Returns route information for active flights
+   - Use `flightboard-lookup routes` command for testing
 
 7. **OpenSky Network** (Free)
    - No configuration needed
@@ -226,6 +256,9 @@ npm run flightboard-tui
 
 # Test flight lookups
 npm run flightboard-lookup -- list
+
+# Test route lookups
+npm run flightboard-lookup -- routes --flight UAL123
 
 # Link for global development
 npm link
