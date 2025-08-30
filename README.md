@@ -7,39 +7,57 @@ A dual-interface flight information display system featuring both a modern web U
 - **Web Interface**: Modern Next.js application with photorealistic split-flap display animations
 - **Terminal UI**: Blessed-based TUI for command-line flight monitoring
 - **Real-time Updates**: Auto-refreshing flight data with status changes
-- **Multiple Data Sources**: Support for real flight APIs or mock data
-- **Airport Support**: Works with any US airport code (ICAO format)
+- **Multiple Data Providers**: Support for 7+ flight data APIs
+- **Airport Information**: Detailed airport data including location and timezone
+- **Global CLI Tools**: Installable command-line utilities for flight lookups
 
 ## Installation
 
+### From Source
+
 ```bash
 npm install
+npm link  # Optional: Install CLI tools globally
+```
+
+### Global Installation (when published)
+
+```bash
+npm install -g flightboard
 ```
 
 ## Usage
 
-### Web Interface
+### Command Line Tools
 
-Start the development server:
+After installation, three global commands are available:
+
+#### `flightboard-web` - Web Interface
+
+Start the web server:
 
 ```bash
-npm run dev
+flightboard-web
+# or during development
+npm run flightboard-web
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Terminal UI
+#### `flightboard-tui` - Terminal UI
 
 Run the TUI application:
 
 ```bash
-npm run tui
+flightboard-tui
+# or during development
+npm run flightboard-tui
 ```
 
-Or with a specific airport:
+With a specific airport:
 
 ```bash
-npm run tui -- --airport=KLAX
+flightboard-tui --airport=KLAX
 ```
 
 **TUI Controls:**
@@ -48,19 +66,49 @@ npm run tui -- --airport=KLAX
 - `Q` or `Esc`: Quit
 - Arrow keys: Navigate through flights
 
+#### `flightboard-lookup` - Flight Data Lookup Tool
+
+Query flight data from various providers:
+
+```bash
+# List configured providers
+flightboard-lookup list
+
+# Test all providers for an airport
+flightboard-lookup flights --airport=KSMF --provider=all
+
+# Test specific provider
+flightboard-lookup flights --airport=KLAX --provider=aviationstack
+
+# Get airport information
+flightboard-lookup airport --code=KSFO
+
+# Make raw API request
+flightboard-lookup raw --url "https://api.example.com/endpoint" --method GET
+
+# Help
+flightboard-lookup --help
+```
+
 ## API Configuration
 
-The app works out of the box with mock data. To use real flight data, configure one or more of these providers:
+Create a `.env.local` file to configure flight data providers:
 
-### Supported Providers (in priority order)
+```bash
+cp env.example .env.local
+```
+
+### Supported Providers
 
 1. **Airframes.io** (PRIORITY - Our service!)
    - Contact: api@airframes.io for access
    - `AIRFRAMES_API_KEY=your_key`
+   - Note: Airport-specific endpoints coming soon
 
 2. **FlightAware AeroAPI**
    - Sign up: [flightaware.com/commercial/aeroapi](https://flightaware.com/commercial/aeroapi/)
    - `FLIGHTAWARE_API_KEY=your_key`
+   - Requires paid subscription
 
 3. **AviationStack**
    - Sign up: [aviationstack.com](https://aviationstack.com/signup/free)
@@ -75,56 +123,72 @@ The app works out of the box with mock data. To use real flight data, configure 
    - Sign up: [radarbox.com/api](https://www.radarbox.com/api)
    - `AIRNAV_API_KEY=your_key`
 
-6. **airplanes.live** (Free)
-   - Community-driven ADS-B data
+6. **adsb.im** (Free)
+   - Flight schedule lookup by callsign and position
    - No API key required
-   - Note: Globe API protected by Cloudflare (works in browser only)
-   - Schedules API works for specific ICAO hex codes
+   - Uses POST to `/api/0/routeset` with callsign, lat, lng
 
 7. **OpenSky Network** (Free)
    - No configuration needed
    - Rate limits apply
 
-### Configuring Provider Priority
+### Provider Priority Configuration
 
 Set the order in which providers are tried:
 
 ```bash
 # In .env.local
-FLIGHT_PROVIDER_PRIORITY=airframes,flightaware,aviationstack,airplaneslive
+FLIGHT_PROVIDER_PRIORITY=airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,opensky
 
-# Copy the example file to get started
-cp .env.local.example .env.local
+# Default if not specified:
+# airframes,flightaware,aviationstack,flightradar24,airnav,adsbim,opensky
 ```
 
 The app will automatically try providers in the specified order until it finds available data. If all providers fail, it falls back to simulated mock data.
 
-## Provider Testing CLI
+### Provider Notes
 
-Test and debug flight data providers:
+- **Disabled Providers**: If a provider doesn't appear in `FLIGHT_PROVIDER_PRIORITY`, it's disabled
+- **API Keys**: Only required for commercial providers
+- **Free Providers**: adsb.im and OpenSky work without configuration
+- **Mock Data**: Automatically used when no providers return data
 
-```bash
-# Test airplanes.live schedules
-npm run provider -- schedules --icao=A8C7DF,A51B58
+## Airport Information
 
-# Test all providers for an airport
-npm run provider -- flights --airport=KLAX --provider=all
+Both web and TUI interfaces display detailed airport information:
+- Airport name and ICAO/IATA codes
+- City and country
+- Current local time and UTC time
+- Timezone information
 
-# Get airport information
-npm run provider -- airport --code=KSFO
-
-# List configured providers
-npm run provider -- list
-
-# Help
-npm run provider -- --help
-```
+Data sourced from Airframes.io airport API when available.
 
 ## Building for Production
 
 ```bash
+# Build everything
 npm run build
+
+# Build only CLI tools
+npm run build:cli
+
+# Start production server
 npm start
+```
+
+## Project Structure
+
+```
+flightboard/
+├── src/
+│   ├── app/           # Next.js app router pages
+│   ├── cli/           # CLI tools (TUI, lookup, web)
+│   ├── components/    # React components
+│   ├── lib/           # Shared libraries and providers
+│   └── types/         # TypeScript type definitions
+├── bin/               # CLI wrapper scripts
+├── dist/              # Compiled CLI tools
+└── public/            # Static assets
 ```
 
 ## Technologies Used
@@ -134,7 +198,9 @@ npm start
 - **Tailwind CSS**: Utility-first styling
 - **shadcn/ui**: High-quality UI components
 - **Blessed**: Terminal UI library
-- **React**: UI library for web interface
+- **Commander**: CLI argument parsing
+- **Chalk**: Terminal string styling
+- **Node-fetch**: HTTP client for Node.js
 
 ## Mock Data
 
@@ -144,7 +210,41 @@ When using mock data, the system generates realistic flight information includin
 - Dynamic status updates (boarding, departed, delayed, etc.)
 - Gate and terminal assignments
 - Estimated and actual times
+- Aircraft types
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run web dev server
+npm run dev
+
+# Run TUI
+npm run flightboard-tui
+
+# Test flight lookups
+npm run flightboard-lookup -- list
+
+# Link for global development
+npm link
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) file for details
+
+## Acknowledgments
+
+- Airport data provided by [Airframes.io](https://airframes.io)
+- Community ADS-B data from various open sources
+- UI inspiration from classic airport split-flap displays

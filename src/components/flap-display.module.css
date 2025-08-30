@@ -1,0 +1,69 @@
+.flapDisplay {
+  display: inline-flex;
+  gap: 2px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  user-select: none;
+}
+
+.flapChar {
+  position: relative;
+  width: 1.2ch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+  border: 1px solid #333;
+  border-radius: 3px;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  perspective: 200px;
+}
+
+.flapCharInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3);
+  transform-style: preserve-3d;
+  transition: transform 0.1s;
+}
+
+
+.flipping .flapCharInner {
+  animation: flip 0.1s ease-in-out;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(-90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* Add a subtle split-flap line effect */
+.flapChar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 10;
+  pointer-events: none;
+}

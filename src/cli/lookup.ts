@@ -1,0 +1,245 @@
+#!/usr/bin/env node
+
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
+
+// Load environment variables from .env.local BEFORE importing providers
+const envPath = path.resolve(process.cwd(), '.env.local');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log('Loaded .env.local');
+} else {
+  console.log('No .env.local file found');
+}
+
+// Now import other modules after env vars are loaded
+import { Command } from 'commander';
+import fetch from 'node-fetch';
+import chalk from 'chalk';
+import { 
+  AirframesProvider, 
+  FlightAwareProvider, 
+  FlightRadar24Provider,
+  AirNavProvider,
+  AdsbImProvider,
+  AggregatedFlightProvider,
+  getConfiguredProviders
+} from '../lib/flight-providers';
+import { 
+  AviationStackProvider,
+  OpenSkyProvider
+} from '../lib/aviation-api';
+import { fetchAirportCoordinates } from '../lib/airport-coords';
+
+const program = new Command();
+
+// Helper to print JSON beautifully
+function printJson(data: any, title?: string) {
+  if (title) {
+    console.log(chalk.cyan.bold(`\n${title}:`));
+  }
+  console.log(JSON.stringify(data, null, 2));
+}
+
+// Helper to print success/error
+function printResult(success: boolean, message: string) {
+  if (success) {
+    console.log(chalk.green('✓'), message);
+  } else {
+    console.log(chalk.red('✗'), message);
+  }
+}
+
+program
+  .name('flightboard-lookup')
+  .description('FlightBoard - Flight data lookup utility')
+  .version('1.0.0');
+
+// Test flights for an airport
+program
+  .command('flights')
+  .description('Fetch flights for an airport using specified provider')
+  .requiredOption('--airport <code>', 'Airport ICAO code (e.g., KSMF)')
+  .option('--provider <name>', 'Provider name (airframes, flightaware, aviationstack, etc.)', 'all')
+  .option('--type <type>', 'Flight type (departure/arrival)', 'departure')
+  .action(async (options) => {
+    console.log(chalk.yellow.bold(`Testing flight data for ${options.airport}...`));
+    
+    const providers: Record<string, any> = {
+      airframes: process.env.AIRFRAMES_API_KEY ? new AirframesProvider(process.env.AIRFRAMES_API_KEY) : null,
+      flightaware: process.env.FLIGHTAWARE_API_KEY ? new FlightAwareProvider(process.env.FLIGHTAWARE_API_KEY) : null,
+      flightradar24: process.env.FLIGHTRADAR24_API_KEY ? new FlightRadar24Provider(process.env.FLIGHTRADAR24_API_KEY) : null,
+      airnav: process.env.AIRNAV_API_KEY ? new AirNavProvider(process.env.AIRNAV_API_KEY) : null,
+      adsbim: new AdsbImProvider(),
+      aviationstack: process.env.AVIATIONSTACK_API_KEY ? new AviationStackProvider() : null,
+      opensky: new OpenSkyProvider()
+    };
+
+    const testProvider = async (name: string, provider: any) => {
+      if (!provider) {
+        console.log(chalk.yellow(`⚠ ${name}: No API key configured`));
+        return;
+      }
+
+      console.log(chalk.cyan(`\nTesting ${name}...`));
+      try {
+        const startTime = Date.now();
+        const flights = await provider.fetchFlights(options.airport, options.type);
+        const elapsed = Date.now() - startTime;
+        
+        printResult(flights && flights.length > 0, 
+          `${name}: Found ${flights?.length || 0} flights (${elapsed}ms)`);
+        
+        if (flights && flights.length > 0) {
+          console.log(chalk.gray(`  Sample flight: ${flights[0].flightNumber} - ${flights[0].airline}`));
+          console.log(chalk.gray(`  ${flights[0].origin} → ${flights[0].destination}`));
+        }
+      } catch (error: any) {
+        printResult(false, `${name}: ${error.message}`);
+      }
+    };
+
+    if (options.provider === 'all') {
+      for (const [name, provider] of Object.entries(providers)) {
+        await testProvider(name, provider);
+      }
+    } else {
+      const provider = providers[options.provider];
+      if (!provider) {
+        console.error(chalk.red(`Unknown provider: ${options.provider}`));
+        console.log(chalk.gray(`Available: ${Object.keys(providers).join(', ')}`));
+        process.exit(1);
+      }
+      await testProvider(options.provider, provider);
+    }
+  });
+
+// Test airport info
+program
+  .command('airport')
+  .description('Fetch airport information')
+  .requiredOption('--code <code>', 'Airport ICAO code (e.g., KLAX)')
+  .action(async (options) => {
+    console.log(chalk.yellow.bold(`Fetching airport info for ${options.code}...`));
+    
+    // Try Airframes.io API
+    console.log(chalk.cyan('\nTrying Airframes.io API...'));
+    try {
+      const response = await fetch(`https://api.airframes.io/airports/icao/${options.code}`);
+      printResult(response.ok, `Response status: ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        printJson(data, 'Airport Data');
+      }
+    } catch (error) {
+      console.error(chalk.red('Error:'), error);
+    }
+
+    // Also fetch coordinates
+    console.log(chalk.cyan('\nFetching coordinates...'));
+    const coords = await fetchAirportCoordinates(options.code);
+    if (coords) {
+      printResult(true, `Coordinates: ${coords.latitude}, ${coords.longitude}`);
+    } else {
+      printResult(false, 'No coordinates found');
+    }
+  });
+
+// List configured providers
+program
+  .command('list')
+  .description('List all configured providers')
+  .action(() => {
+    console.log(chalk.yellow.bold('Configured Providers:'));
+    
+    const checkProvider = (name: string, apiKey?: string) => {
+      if (apiKey) {
+        console.log(chalk.green('✓'), chalk.white(name), chalk.gray(`(Key: ${apiKey.substring(0, 8)}...)`));
+      } else {
+        console.log(chalk.gray('○'), chalk.gray(name), chalk.gray('(Not configured)'));
+      }
+    };
+
+    checkProvider('Airframes.io', process.env.AIRFRAMES_API_KEY);
+    checkProvider('FlightAware', process.env.FLIGHTAWARE_API_KEY);
+    checkProvider('AviationStack', process.env.AVIATIONSTACK_API_KEY);
+    checkProvider('FlightRadar24', process.env.FLIGHTRADAR24_API_KEY);
+    checkProvider('AirNav RadarBox', process.env.AIRNAV_API_KEY);
+    checkProvider('Aviation Edge', process.env.AVIATION_EDGE_API_KEY);
+    console.log(chalk.green('✓'), chalk.white('adsb.im'), chalk.gray('(No key required)'));
+    console.log(chalk.green('✓'), chalk.white('OpenSky Network'), chalk.gray('(No key required)'));
+    
+    console.log(chalk.cyan('\nPriority order:'), process.env.FLIGHT_PROVIDER_PRIORITY || 'default');
+  });
+
+// Raw API test
+program
+  .command('raw')
+  .description('Make a raw API request')
+  .requiredOption('--url <url>', 'API URL')
+  .option('--method <method>', 'HTTP method', 'GET')
+  .option('--body <json>', 'Request body (JSON string)')
+  .option('--header <header>', 'Add header (format: "Key: Value")', (value, previous: string[]) => {
+    return previous ? [...previous, value] : [value];
+  }, [])
+  .action(async (options) => {
+    console.log(chalk.yellow.bold('Making raw API request...'));
+    console.log(chalk.gray(`URL: ${options.url}`));
+    console.log(chalk.gray(`Method: ${options.method}`));
+    
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+      'User-Agent': 'FlightBoard/1.0'
+    };
+    
+    // Parse custom headers
+    if (options.header && options.header.length > 0) {
+      options.header.forEach((h: string) => {
+        const [key, ...valueParts] = h.split(':');
+        if (key && valueParts.length > 0) {
+          headers[key.trim()] = valueParts.join(':').trim();
+        }
+      });
+    }
+    
+    console.log(chalk.gray('Headers:'), headers);
+    
+    try {
+      const fetchOptions: any = {
+        method: options.method,
+        headers
+      };
+      
+      if (options.body) {
+        fetchOptions.body = options.body;
+        headers['Content-Type'] = 'application/json';
+      }
+      
+      const response = await fetch(options.url, fetchOptions);
+      printResult(response.ok, `Response: ${response.status} ${response.statusText}`);
+      
+      console.log(chalk.gray('Response Headers:'));
+      response.headers.forEach((value, key) => {
+        console.log(chalk.gray(`  ${key}: ${value}`));
+      });
+      
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('json')) {
+        const data = await response.json();
+        printJson(data, 'Response Body');
+      } else {
+        const text = await response.text();
+        console.log(chalk.cyan('\nResponse Body:'));
+        console.log(text.substring(0, 1000));
+        if (text.length > 1000) {
+          console.log(chalk.gray(`... (${text.length - 1000} more characters)`));
+        }
+      }
+    } catch (error) {
+      console.error(chalk.red('Error:'), error);
+    }
+  });
+
+program.parse(process.argv);

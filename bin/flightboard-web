@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+// This is a wrapper script that runs the Next.js dev server
+const { spawn } = require('child_process');
+const path = require('path');
+const chalk = require('chalk');
+
+const projectRoot = path.join(__dirname, '..');
+
+console.log(chalk.cyan.bold('🛫 Starting FlightBoard Web UI...'));
+
+const child = spawn('npx', ['next', 'dev', '--turbopack'], {
+  cwd: projectRoot,
+  stdio: 'inherit',
+  shell: true
+});
+
+child.on('exit', (code) => {
+  process.exit(code);
+});
+
+// Handle Ctrl+C gracefully
+process.on('SIGINT', () => {
+  console.log(chalk.yellow('\n👋 Shutting down FlightBoard Web UI...'));
+  child.kill('SIGINT');
+});
