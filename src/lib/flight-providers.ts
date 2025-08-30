@@ -75,7 +75,7 @@ async function enrichFlightWithRoute(flight: Flight): Promise<Flight> {
     });
     
     if (response.ok) {
-      const data = await response.json();
+      const data: any = await response.json();
       if (data && data.route) {
         return {
           ...flight,
@@ -777,13 +777,7 @@ export class AdsbLolProvider implements FlightDataProvider {
       gate: 'N/A',
       terminal: undefined,
       status: this.determineStatus(aircraft, type),
-      aircraft: aircraft.t || 'Unknown',
-      registration: aircraft.r,
-      altitude: aircraft.alt_baro,
-      groundSpeed: aircraft.gs,
-      track: aircraft.track,
-      latitude: aircraft.lat,
-      longitude: aircraft.lon
+      aircraft: aircraft.t || 'Unknown'
     };
   }
 
@@ -797,9 +791,9 @@ export class AdsbLolProvider implements FlightDataProvider {
       if (altitude < 5000 && verticalRate > 100) return 'departed';
       return 'departed';
     } else {
-      if (altitude < 5000 && verticalRate < -100) return 'on-time';
+      if (altitude < 5000 && verticalRate < -100) return 'arriving';
       if (altitude < 500 && groundSpeed < 50) return 'landed';
-      return 'on-time';
+      return 'scheduled';
     }
   }
 

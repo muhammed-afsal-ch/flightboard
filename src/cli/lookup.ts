@@ -305,34 +305,35 @@ program
           }
           // Handle adsb.im response (returns object)
           else if (provider === 'adsbim' && data && typeof data === 'object') {
+            const responseData = data as any;
             // Check if we have any route data
-            if (data.route || data.aircraft || data.flight) {
+            if (responseData.route || responseData.aircraft || responseData.flight) {
               foundData = true;
               
               // Check if we got route data
-              if (data.route) {
+              if (responseData.route) {
                 console.log(chalk.cyan('\nRoute Information:'));
-                console.log(chalk.white('  Origin:'), data.route.origin || 'Unknown');
-                console.log(chalk.white('  Destination:'), data.route.destination || 'Unknown');
+                console.log(chalk.white('  Origin:'), responseData.route.origin || 'Unknown');
+                console.log(chalk.white('  Destination:'), responseData.route.destination || 'Unknown');
                 
-                if (data.route.waypoints && Array.isArray(data.route.waypoints)) {
-                  console.log(chalk.white('  Waypoints:'), data.route.waypoints.length);
+                if (responseData.route.waypoints && Array.isArray(responseData.route.waypoints)) {
+                  console.log(chalk.white('  Waypoints:'), responseData.route.waypoints.length);
                 }
               }
               
               // Check if we got aircraft info
-              if (data.aircraft) {
+              if (responseData.aircraft) {
                 console.log(chalk.cyan('\nAircraft Information:'));
-                console.log(chalk.white('  Type:'), data.aircraft.type || 'Unknown');
-                console.log(chalk.white('  Registration:'), data.aircraft.registration || 'Unknown');
+                console.log(chalk.white('  Type:'), responseData.aircraft.type || 'Unknown');
+                console.log(chalk.white('  Registration:'), responseData.aircraft.registration || 'Unknown');
               }
               
               // Check if we got flight info
-              if (data.flight) {
+              if (responseData.flight) {
                 console.log(chalk.cyan('\nFlight Information:'));
-                console.log(chalk.white('  Airline:'), data.flight.airline || 'Unknown');
-                console.log(chalk.white('  Flight Number:'), data.flight.number || options.flight);
-                console.log(chalk.white('  Status:'), data.flight.status || 'Unknown');
+                console.log(chalk.white('  Airline:'), responseData.flight.airline || 'Unknown');
+                console.log(chalk.white('  Flight Number:'), responseData.flight.number || options.flight);
+                console.log(chalk.white('  Status:'), responseData.flight.status || 'Unknown');
               }
               
               // Show full response if verbose
