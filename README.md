@@ -12,16 +12,16 @@ A dual-interface flight information display system featuring both a modern web U
 
 ## 🚀 Recent Updates
 
-- **Production Ready**: Fixed all TypeScript compilation errors for successful Docker builds
-- **Automatic Route Enrichment**: Flights missing airport details are automatically enriched with route data from adsb.im/adsb.lol
-- **Complete Docker Support**: Multi-stage Dockerfile with optimized production builds and docker-compose configuration
-- **CI/CD Pipeline**: Dual GitHub Actions workflows for CI testing and automatic Docker publishing to GHCR
-- **Multi-Provider Route Checking**: Routes command intelligently checks all providers, stops on first success
-- **Enhanced adsb.lol Integration**: Full support for route lookup endpoint matching adsb.im API
-- **TypeScript Improvements**: Resolved all type safety issues for production builds
-- **Standalone Next.js Output**: Optimized Docker images using Next.js standalone mode
-- **Multi-Platform Docker Images**: Automated builds for amd64 and arm64 architectures
-- **Automatic GitHub Releases**: Version tags trigger Docker builds and create releases
+- **Enhanced CI/CD Pipeline**: Workflows now feature concurrency control and dependency chains for reliable releases
+- **Multi-Architecture Docker Support**: Images built for x86-64, Apple Silicon, and all ARM devices (Raspberry Pi, Orange Pi)
+- **Production Ready**: All TypeScript compilation errors resolved for successful Docker builds
+- **Automatic Route Enrichment**: Flights missing airport details are automatically enriched from adsb.im/adsb.lol
+- **Workflow Orchestration**: Docker publishing requires CI tests to pass first, ensuring quality releases
+- **Concurrency Control**: Duplicate workflow runs are automatically cancelled to save resources
+- **Complete Docker Support**: Multi-stage builds with Next.js standalone output for minimal image size
+- **Multi-Provider Route Checking**: Routes command intelligently queries all providers until success
+- **SBOM & Provenance**: Docker images include software bill of materials and build attestations
+- **Automatic GitHub Releases**: Version tags trigger full CI/CD pipeline and create releases
 
 ## Features
 
@@ -64,7 +64,7 @@ npm link
 #### Pull from GitHub Container Registry
 
 ```bash
-# Pull the latest stable version
+# Pull the latest stable version (auto-selects architecture)
 docker pull ghcr.io/airframes/flightboard:latest
 
 # Or pull a specific version
@@ -73,6 +73,14 @@ docker pull ghcr.io/airframes/flightboard:v1.0.0
 # Run the container
 docker run -p 3000:3000 --env-file .env.local ghcr.io/airframes/flightboard:latest
 ```
+
+**Supported Architectures:**
+- `linux/amd64` - Standard x86-64 (Intel/AMD processors)
+- `linux/arm64` - 64-bit ARM (Apple Silicon M1/M2/M3, AWS Graviton, newer Raspberry Pi)
+- `linux/arm/v7` - 32-bit ARM v7 (Raspberry Pi 2/3/4, Orange Pi, most 32-bit ARM boards)
+- `linux/arm/v6` - 32-bit ARM v6 (Raspberry Pi 1/Zero/Zero W, older ARM devices)
+
+Docker will automatically pull the correct image for your architecture.
 
 #### Build Locally
 
@@ -334,9 +342,13 @@ FlightBoard includes a comprehensive GitHub Actions workflow for continuous inte
 - **Automated Testing**: Executes test suite on every PR and push
 - **Docker Validation**: Builds Docker image to ensure containerization works
 - **Pull Request Checks**: Automatically runs on all pull requests
+- **Concurrency Control**: Cancels outdated workflow runs automatically
+- **Workflow Dependencies**: Docker publish requires CI tests to pass first
+- **Multi-Architecture Builds**: Creates images for x86-64, ARM64, ARMv7, and ARMv6
 - **Automatic Docker Publishing**: Tags trigger multi-platform image builds
 - **GitHub Container Registry**: Images published to ghcr.io/airframes/flightboard
 - **Release Automation**: Version tags create GitHub releases with changelogs
+- **Build Attestations**: Generates SBOM and provenance for supply chain security
 
 ### GitHub Actions Workflows
 
@@ -347,12 +359,21 @@ The project includes two main workflows:
    - Pushes to `main` and `develop` branches
    - Tests on Node.js 18.x and 20.x
    - Validates Docker builds
+   - Concurrency control cancels outdated runs
+   - Can be called by other workflows
 
 2. **Docker Publish** (`docker-publish.yml`)
    - Triggers on version tags (e.g., `v1.0.0`)
-   - Builds multi-platform images (amd64, arm64)
-   - Publishes to GitHub Container Registry
+   - **Requires CI workflow to pass first**
+   - Concurrency control prevents duplicate runs
+   - Builds multi-architecture images:
+     - `linux/amd64` (x86-64)
+     - `linux/arm64` (Apple Silicon, AWS Graviton)
+     - `linux/arm/v7` (Raspberry Pi 2/3/4, Orange Pi)
+     - `linux/arm/v6` (Raspberry Pi Zero/1)
+   - Publishes to GitHub Container Registry with automatic architecture detection
    - Creates GitHub releases automatically
+   - Generates SBOM and provenance attestations
 
 ### Creating a Release
 
@@ -365,9 +386,13 @@ git push origin v1.0.0
 ```
 
 This will automatically:
-- Build and publish Docker images to GHCR
-- Create a GitHub release
-- Tag images with version numbers and `latest`
+1. Run the full CI test suite
+2. Build multi-architecture Docker images (only if CI passes)
+3. Publish images to GitHub Container Registry
+4. Create a GitHub release with changelog
+5. Tag images with semantic version numbers and `latest`
+
+**Note**: The Docker publish workflow will only proceed if all CI tests pass successfully.
 
 ## Project Structure
 

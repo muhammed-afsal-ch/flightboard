@@ -6,6 +6,11 @@ on:
   pull_request:
     # Run on all pull requests regardless of target branch
     types: [opened, synchronize, reopened]
+  workflow_call:  # Allow this workflow to be called by other workflows
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-and-test:
