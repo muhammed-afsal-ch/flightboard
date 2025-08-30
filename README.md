@@ -1,19 +1,26 @@
 # FlightBoard
 
+![CI](https://github.com/airframes/flightboard/workflows/CI/badge.svg)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
+![TypeScript](https://img.shields.io/badge/typescript-%5E5.0.0-blue)
+![Next.js](https://img.shields.io/badge/next.js-15.5.2-black)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 A dual-interface flight information display system featuring both a modern web UI and a terminal-based TUI, similar to airport departure/arrival boards.
 
 ## 🚀 Recent Updates
 
+- **Automatic Route Enrichment**: Flights missing airport details are automatically enriched with route data
+- **Docker Support**: Complete containerization with Dockerfile and docker-compose
+- **CI/CD Pipeline**: GitHub Actions workflow for linting, testing, and Docker builds
 - **Multi-Provider Routes**: Routes command now checks all providers by default, stops on first success
 - **adsb.lol Routes Support**: Routes command now supports both adsb.im and adsb.lol providers
 - **adsb.lol Provider**: Added new free provider for real-time ADS-B data with geographic search
 - **Verbose Request Logging**: Routes command now shows full request details with `-v` flag
 - **Flight Route Lookup**: New `routes` command in `flightboard-lookup` for querying adsb.im
 - **Global CLI Tools**: All commands now installable globally via `npm link`
-- **Renamed Commands**: More intuitive names (`flightboard-web`, `flightboard-tui`, `flightboard-lookup`)
-- **adsb.im Integration**: Added support for flight route data via adsb.im API
 - **TypeScript CLI**: Commands run directly from TypeScript source with tsx
-- **Environment Configuration**: Simplified with `env.example` file
 
 ## Features
 
@@ -21,16 +28,44 @@ A dual-interface flight information display system featuring both a modern web U
 - **Terminal UI**: Blessed-based TUI for command-line flight monitoring
 - **Real-time Updates**: Auto-refreshing flight data with status changes
 - **Multiple Data Providers**: Support for 8+ flight data APIs
+- **Automatic Route Enrichment**: Missing flight details are automatically fetched from route providers
 - **Airport Information**: Detailed airport data including location and timezone
 - **Global CLI Tools**: Installable command-line utilities for flight lookups
+- **Docker Support**: Complete containerization for easy deployment
+- **CI/CD Pipeline**: Automated testing and validation with GitHub Actions
+- **Multi-Provider Routes**: Intelligent route lookup across multiple data sources
+
+## Requirements
+
+- Node.js 18.0.0 or higher
+- npm or yarn package manager
+- Docker and Docker Compose (optional, for containerized deployment)
 
 ## Installation
 
 ### From Source
 
 ```bash
+# Clone the repository
+git clone https://github.com/airframes/flightboard.git
+cd flightboard
+
+# Install dependencies
 npm install
-npm link  # Optional: Install CLI tools globally
+
+# Install CLI tools globally (optional)
+npm link
+```
+
+### Using Docker
+
+```bash
+# Using Docker Compose (recommended)
+docker-compose up
+
+# Or build and run manually
+docker build -t flightboard:latest .
+docker run -p 3000:3000 --env-file .env.local flightboard:latest
 ```
 
 ### Global Installation (when published)
@@ -210,6 +245,54 @@ Both web and TUI interfaces display detailed airport information:
 
 Data sourced from Airframes.io airport API when available.
 
+## Docker Support
+
+FlightBoard includes complete Docker support for easy deployment and development.
+
+### Quick Start with Docker
+
+```bash
+# Build the Docker image
+npm run docker:build
+
+# Run the container
+npm run docker:run
+
+# Or use docker-compose
+npm run docker:compose
+```
+
+### Docker Compose
+
+The included `docker-compose.yml` file makes it easy to run FlightBoard with all environment variables:
+
+```bash
+# Start with docker-compose (uses .env file)
+docker-compose up
+
+# Build and start
+docker-compose up --build
+
+# Run in background
+docker-compose up -d
+```
+
+### Manual Docker Commands
+
+```bash
+# Build the image
+docker build -t flightboard:latest .
+
+# Run with environment file
+docker run -p 3000:3000 --env-file .env.local flightboard:latest
+
+# Run with individual environment variables
+docker run -p 3000:3000 \
+  -e AIRFRAMES_API_KEY=your_key \
+  -e AVIATIONSTACK_API_KEY=your_key \
+  flightboard:latest
+```
+
 ## Building for Production
 
 ```bash
@@ -223,6 +306,24 @@ npm run build:cli
 npm start
 ```
 
+## CI/CD Pipeline
+
+FlightBoard includes a comprehensive GitHub Actions workflow for continuous integration:
+
+### Workflow Features
+
+- **Multi-version Testing**: Tests against Node.js 18.x and 20.x
+- **Code Quality**: Runs ESLint and TypeScript type checking
+- **Automated Testing**: Executes test suite on every PR and push
+- **Docker Validation**: Builds Docker image to ensure containerization works
+- **Pull Request Checks**: Automatically runs on all pull requests
+
+### GitHub Actions Workflow
+
+The CI pipeline runs automatically on:
+- All pull requests
+- Pushes to `main` and `develop` branches
+
 ## Project Structure
 
 ```
@@ -235,6 +336,9 @@ flightboard/
 │   └── types/         # TypeScript type definitions
 ├── bin/               # CLI wrapper scripts
 ├── dist/              # Compiled CLI tools
+├── .github/           # GitHub Actions workflows
+│   └── workflows/
+│       └── ci.yml     # CI/CD pipeline
 └── public/            # Static assets
 ```
 
