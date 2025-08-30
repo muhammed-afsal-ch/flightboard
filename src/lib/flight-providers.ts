@@ -2,6 +2,115 @@ import { Flight, Airport, FlightStatus } from '@/types/flight';
 import { FlightDataProvider } from './aviation-api';
 
 // ============================================================================
+// ROUTE ENRICHMENT HELPER
+// ============================================================================
+async function enrichFlightWithRoute(flight: Flight): Promise<Flight> {
+  // Only enrich if we're missing origin or destination details
+  const needsEnrichment = 
+    !flight.origin || flight.origin === 'Unknown' || flight.origin === 'En Route' ||
+    !flight.destination || flight.destination === 'Unknown' || flight.destination === 'En Route' ||
+    !flight.originCode || flight.originCode === 'UNK' || flight.originCode === 'ENR' ||
+    !flight.destinationCode || flight.destinationCode === 'UNK' || flight.destinationCode === 'ENR';
+  
+  if (!needsEnrichment || !flight.flightNumber) {
+    return flight;
+  }
+  
+  console.log(`Enriching flight ${flight.flightNumber} with route data...`);
+  
+  // Try adsb.lol first (usually has better data)
+  try {
+    const response = await fetch('https://api.adsb.lol/api/0/routeset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'FlightBoard/1.0'
+      },
+      body: JSON.stringify({
+        planes: [{
+          callsign: flight.flightNumber,
+          lat: 0,
+          lng: 0
+        }]
+      })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const routeData = data[0];
+        if (routeData._airports && routeData._airports.length >= 2) {
+          const origin = routeData._airports[0];
+          const dest = routeData._airports[1];
+          
+          return {
+            ...flight,
+            origin: origin.name || flight.origin,
+            originCode: origin.icao || origin.iata || flight.originCode,
+            destination: dest.name || flight.destination,
+            destinationCode: dest.icao || dest.iata || flight.destinationCode
+          };
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to enrich ${flight.flightNumber} via adsb.lol:`, error);
+  }
+  
+  // Fallback to adsb.im
+  try {
+    const response = await fetch('https://adsb.im/api/0/routeset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'FlightBoard/1.0'
+      },
+      body: JSON.stringify({
+        callsign: flight.flightNumber,
+        lat: 0,
+        lng: 0
+      })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.route) {
+        return {
+          ...flight,
+          origin: data.route.origin || flight.origin,
+          originCode: data.route.origin || flight.originCode,
+          destination: data.route.destination || flight.destination,
+          destinationCode: data.route.destination || flight.destinationCode
+        };
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to enrich ${flight.flightNumber} via adsb.im:`, error);
+  }
+  
+  return flight;
+}
+
+// Helper to enrich multiple flights in parallel
+export async function enrichFlightsWithRoutes(flights: Flight[]): Promise<Flight[]> {
+  // Process in batches to avoid overwhelming the APIs
+  const batchSize = 5;
+  const enrichedFlights: Flight[] = [];
+  
+  for (let i = 0; i < flights.length; i += batchSize) {
+    const batch = flights.slice(i, i + batchSize);
+    const enrichedBatch = await Promise.all(
+      batch.map(flight => enrichFlightWithRoute(flight))
+    );
+    enrichedFlights.push(...enrichedBatch);
+  }
+  
+  return enrichedFlights;
+}
+
+// ============================================================================
 // AIRFRAMES.IO PROVIDER (Priority - Our own service!)
 // ============================================================================
 export class AirframesProvider implements FlightDataProvider {
@@ -627,7 +736,10 @@ export class AdsbLolProvider implements FlightDataProvider {
         if (flights.length >= 20) break;
       }
 
-      return flights;
+      // Enrich flights with route data
+      console.log(`adsb.lol: Enriching ${flights.length} flights with route data...`);
+      const enrichedFlights = await enrichFlightsWithRoutes(flights);
+      return enrichedFlights;
     } catch (error) {
       console.error('adsb.lol API error:', error);
       return [];

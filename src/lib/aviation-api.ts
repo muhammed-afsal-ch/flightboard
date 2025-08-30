@@ -1,4 +1,5 @@
 import { Flight, Airport } from '@/types/flight';
+import { enrichFlightsWithRoutes } from './flight-providers';
 
 // Aviation Edge API (requires API key)
 // You can get a free API key from https://aviation-edge.com/
@@ -37,7 +38,12 @@ export class OpenSkyProvider implements FlightDataProvider {
       }
       
       const data: any = await response.json();
-      return this.transformOpenSkyData(data, type);
+      const flights = this.transformOpenSkyData(data, type);
+      
+      // Enrich flights with route data
+      console.log(`OpenSky: Enriching ${flights.length} flights with route data...`);
+      const enrichedFlights = await enrichFlightsWithRoutes(flights);
+      return enrichedFlights;
     } catch (error) {
       console.error('OpenSky API error:', error);
       return [];
