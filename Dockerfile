@@ -23,6 +23,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
+# Note: We don't use --turbopack as it's not supported on ARM v7/v6 architectures
 RUN npm run build
 
 # Production image, copy all the files and run next

@@ -1,6 +1,6 @@
 {
   "name": "flightboard",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": false,
   "bin": {
     "flightboard-tui": "./bin/flightboard-tui",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack && npm run build:cli",
+    "build": "next build && npm run build:cli",
     "build:cli": "tsc -p tsconfig.cli.json",
     "start": "next start",
     "test": "jest",
