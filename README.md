@@ -168,11 +168,20 @@ flightboard-tui
 npm run flightboard-tui
 ```
 
-With a specific airport:
+With options:
 
 ```bash
-flightboard-tui --airport=KLAX
+flightboard-tui --airport=KLAX                     # Set airport
+flightboard-tui --theme=retro                      # Set theme
+flightboard-tui --minimal                          # Minimal mode (no version/help text)
+flightboard-tui --airport=KSFO --theme=matrix      # Multiple options
 ```
+
+**TUI Features:**
+- **7 Color Themes**: Classic, Modern, Retro Terminal, Matrix, High Contrast, Ocean, Sunset
+- **Version Display**: Shows FlightBoard version and GitHub URL (hidden with `--minimal`)
+- **Real-time Updates**: Auto-refreshing flight statuses
+- **Theme Selection**: Set via `--theme` flag at startup
 
 **TUI Controls:**
 - `Tab` or `D`/`A`: Switch between Departures and Arrivals
