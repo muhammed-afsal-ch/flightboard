@@ -244,32 +244,23 @@ cp env.example .env.local
 
 ### Supported Providers
 
-1. **Airframes.io** (PRIORITY - Our service!)
+1. **Airframes.io**
    - Get API key: [app.airframes.io/user/dashboard](https://app.airframes.io/user/dashboard) - click API Key button
    - Free for all feeders, Patreons, and paid Discord supporters
    - `AIRFRAMES_API_KEY=your_key`
    - Note: Paid API tiers coming in the future
 
-2. **FlightAware AeroAPI**
-   - Sign up: [flightaware.com/commercial/aeroapi](https://flightaware.com/commercial/aeroapi/)
-   - `FLIGHTAWARE_API_KEY=your_key`
-   - Requires paid subscription
-
-3. **AviationStack**
+2. **AviationStack**
    - Sign up: [Get your API key here](https://apilayer.com?fpr=kevin31&fp_sid=flightbo) *
    - Free tier: 100 requests/month
    - `AVIATIONSTACK_API_KEY=your_key`
    - \* *Affiliate link - helps support FlightBoard development*
 
-4. **FlightRadar24**
-   - Commercial service: [flightradar24.com](https://www.flightradar24.com/commercial-services/data-feeds)
-   - `FLIGHTRADAR24_API_KEY=your_key`
-
-5. **AirNav RadarBox**
+3. **AirNav RadarBox**
    - Sign up: [radarbox.com/api](https://www.radarbox.com/api)
    - `AIRNAV_API_KEY=your_key`
 
-6. **adsb.im** (Free)
+4. **adsb.im** (Free)
    - Flight schedule and route lookup by callsign and position
    - No API key required
    - Endpoint: `POST /api/0/routeset`
@@ -277,7 +268,7 @@ cp env.example .env.local
    - Returns route information for active flights
    - Use `flightboard-lookup routes` command for testing
 
-7. **adsb.lol** (Free)
+5. **adsb.lol** (Free)
    - Real-time ADS-B data with geographic search
    - No API key required
    - Endpoints:
@@ -287,9 +278,26 @@ cp env.example .env.local
    - Max radius: 250 nautical miles for geographic search
    - Use `flightboard-lookup routes --provider adsblol` for route testing
 
-8. **OpenSky Network** (Free)
+6. **OpenSky Network** (Free)
    - No configuration needed
    - Rate limits apply
+
+7. **FlightAware AeroAPI** (v4) - Paid Only
+   - Sign up: [flightaware.com/commercial/aeroapi](https://flightaware.com/commercial/aeroapi/)
+   - Portal: [flightaware.com/aeroapi/portal](https://flightaware.com/aeroapi/portal)
+   - `FLIGHTAWARE_API_KEY=your_key`
+   - **Pricing**: Starting at $100/month (no free tier)
+   - Premium features from $1,000/month
+   - Provides real-time flight tracking, gate info, and accurate predictions
+
+8. **FlightRadar24** (Commercial API) - Paid Only
+   - Sign up: [fr24api.flightradar24.com](https://fr24api.flightradar24.com/)
+   - Commercial inquiries: business@fr24.com
+   - `FLIGHTRADAR24_API_KEY=your_key`
+   - **Pricing**: Commercial licenses only (no free tier)
+   - Sandbox available for testing with paid account
+   - Provides real-time aircraft positions and flight data
+   - Documentation: [fr24api.flightradar24.com/docs](https://fr24api.flightradar24.com/docs)
 
 ### Provider Priority Configuration
 
@@ -307,9 +315,15 @@ The app will automatically try providers in the specified order until it finds a
 
 ### Provider Notes
 
+- **Free Providers**: 
+  - Airframes.io (free for feeders/supporters)
+  - AviationStack (100 requests/month free)
+  - adsb.im, adsb.lol, OpenSky (no API key needed)
+- **Paid-Only Providers**: 
+  - FlightAware ($100+/month)
+  - FlightRadar24 (commercial only)
+  - AirNav RadarBox (subscription required)
 - **Disabled Providers**: If a provider doesn't appear in `FLIGHT_PROVIDER_PRIORITY`, it's disabled
-- **API Keys**: Only required for commercial providers
-- **Free Providers**: adsb.im, adsb.lol, and OpenSky work without configuration
 - **Mock Data**: Automatically used when no providers return data
 
 ## Airport Information
