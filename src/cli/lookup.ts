@@ -284,14 +284,14 @@ program
                   console.log(chalk.cyan('\nOrigin Airport:'));
                   console.log(chalk.white('  Name:'), origin.name || 'Unknown');
                   console.log(chalk.white('  Location:'), origin.location || 'Unknown');
-                  console.log(chalk.white('  ICAO/IATA:'), `${origin.icao}/${origin.iata}` || 'Unknown');
-                  console.log(chalk.white('  Coordinates:'), `${origin.lat}, ${origin.lon}` || 'Unknown');
+                  console.log(chalk.white('  ICAO/IATA:'), origin.icao && origin.iata ? `${origin.icao}/${origin.iata}` : 'Unknown');
+                  console.log(chalk.white('  Coordinates:'), origin.lat && origin.lon ? `${origin.lat}, ${origin.lon}` : 'Unknown');
                   
                   console.log(chalk.cyan('\nDestination Airport:'));
                   console.log(chalk.white('  Name:'), destination.name || 'Unknown');
                   console.log(chalk.white('  Location:'), destination.location || 'Unknown');
-                  console.log(chalk.white('  ICAO/IATA:'), `${destination.icao}/${destination.iata}` || 'Unknown');
-                  console.log(chalk.white('  Coordinates:'), `${destination.lat}, ${destination.lon}` || 'Unknown');
+                  console.log(chalk.white('  ICAO/IATA:'), destination.icao && destination.iata ? `${destination.icao}/${destination.iata}` : 'Unknown');
+                  console.log(chalk.white('  Coordinates:'), destination.lat && destination.lon ? `${destination.lat}, ${destination.lon}` : 'Unknown');
                 }
                 
                 // Show full response if verbose
