@@ -8,6 +8,7 @@ export const matrixTheme: Theme = {
   description: 'Cyberpunk terminal with animated digital rain',
   typography: {
     fontFamily: '"Fira Code", "Courier New", monospace',
+    fontFamilyMono: '"Fira Code", "Courier New", monospace',
     fontFamilyDisplay: '"Fira Code", "Courier New", monospace',
     fontSize: {
       xs: '0.75rem',
@@ -21,18 +22,23 @@ export const matrixTheme: Theme = {
       '5xl': '3rem',
     },
     fontWeight: {
+      light: '300',
       normal: '400',
       medium: '500',
       semibold: '600',
       bold: '700',
     },
     lineHeight: {
-      none: '1',
       tight: '1.25',
-      snug: '1.375',
       normal: '1.5',
       relaxed: '1.625',
-      loose: '2',
+    },
+    letterSpacing: {
+      tighter: '-0.05em',
+      tight: '-0.025em',
+      normal: '0',
+      wide: '0.025em',
+      wider: '0.05em',
     },
   },
   spacing: defaultSpacing,
@@ -42,8 +48,6 @@ export const matrixTheme: Theme = {
     md: '0.25rem',
     lg: '0.375rem',
     xl: '0.5rem',
-    '2xl': '0.75rem',
-    '3xl': '1rem',
     full: '9999px',
   },
   shadows: {
@@ -52,7 +56,6 @@ export const matrixTheme: Theme = {
     md: '0 4px 6px -1px rgba(0, 255, 0, 0.1), 0 2px 4px -1px rgba(0, 255, 0, 0.06)',
     lg: '0 10px 15px -3px rgba(0, 255, 0, 0.1), 0 4px 6px -2px rgba(0, 255, 0, 0.05)',
     xl: '0 20px 25px -5px rgba(0, 255, 0, 0.1), 0 10px 10px -5px rgba(0, 255, 0, 0.04)',
-    '2xl': '0 25px 50px -12px rgba(0, 255, 0, 0.25)',
     inner: 'inset 0 2px 4px 0 rgba(0, 255, 0, 0.06)',
     flap: '0 0 20px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(0, 255, 0, 0.2)',
   },
@@ -102,7 +105,7 @@ export const matrixTheme: Theme = {
       secondary: '120 50 10',  // Dark green
       secondaryForeground: '120 100 60',
       background: '0 0 0',  // Pure black
-      backgroundAlpha: '1',  // Fully opaque
+      // backgroundAlpha: '1',  // Fully opaque - removed as not part of interface
       foreground: '120 100 60',  // Bright green text
       card: '120 50 5',  // Very dark green
       cardForeground: '120 100 60',

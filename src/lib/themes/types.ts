@@ -45,11 +45,13 @@ export interface ThemeColors {
   ring: string;
   
   // Flight status colors
+  flightScheduled: string;
   flightOnTime: string;
   flightDelayed: string;
   flightCancelled: string;
   flightBoarding: string;
   flightDeparted: string;
+  flightArriving: string;
   flightArrived: string;
   
   // Split-flap display colors
@@ -89,9 +91,12 @@ export interface ThemeTypography {
   
   // Line heights
   lineHeight: {
+    none?: string;
     tight: string;
+    snug?: string;
     normal: string;
     relaxed: string;
+    loose?: string;
   };
   
   // Letter spacing
@@ -123,6 +128,8 @@ export interface ThemeBorderRadius {
   md: string;
   lg: string;
   xl: string;
+  '2xl'?: string;
+  '3xl'?: string;
   full: string;
 }
 
@@ -132,6 +139,7 @@ export interface ThemeShadows {
   md: string;
   lg: string;
   xl: string;
+  '2xl'?: string;
   inner: string;
   flap: string;
 }

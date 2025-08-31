@@ -7,11 +7,12 @@ import styles from './flap-display.module.css';
 interface FlapDisplayProps {
   value: string;
   size?: 'small' | 'medium' | 'large';
+  className?: string;
 }
 
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -.:/';
 
-export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
+export function FlapDisplay({ value, size = 'medium', className }: FlapDisplayProps) {
   const [displayValue, setDisplayValue] = useState(value);
   const [isFlipping, setIsFlipping] = useState(false);
   const { theme, effectiveColorMode } = useTheme();
@@ -72,7 +73,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'airport') {
     return (
       <div 
-        className={`${styles.flapDisplay} ${sizeClasses[size]} ${isFlipping ? styles.flipping : ''}`}
+        className={`${styles.flapDisplay} ${sizeClasses[size]} ${isFlipping ? styles.flipping : ''} ${className || ''}`}
         style={{
           '--flap-bg': effectiveColorMode === 'dark' 
             ? 'linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)' 
@@ -105,7 +106,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'ocean') {
     return (
       <div 
-        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]}`}
+        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]} ${className || ''}`}
         style={{ color: `hsl(${theme.colors[effectiveColorMode].primary})` }}
       >
         {displayValue.split('').map((char, index) => (
@@ -127,7 +128,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'forest') {
     return (
       <div 
-        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]}`}
+        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]} ${className || ''}`}
         style={{ 
           color: `hsl(${theme.colors[effectiveColorMode].primary})`,
           textShadow: effectiveColorMode === 'dark' 
@@ -156,7 +157,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'modern') {
     return (
       <div 
-        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]}`}
+        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]} ${className || ''}`}
         style={{ 
           color: `hsl(${theme.colors[effectiveColorMode].primary})`,
           letterSpacing: '0.05em'
@@ -183,7 +184,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'matrix') {
     return (
       <div 
-        className={`inline-flex gap-0 font-mono font-bold ${sizeClasses[size]}`}
+        className={`inline-flex gap-0 font-mono font-bold ${sizeClasses[size]} ${className || ''}`}
         style={{ 
           color: `hsl(${theme.colors[effectiveColorMode].primary})`,
           textShadow: effectiveColorMode === 'dark'
@@ -213,7 +214,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'superthin') {
     return (
       <div 
-        className={`inline-flex gap-0 font-mono ${sizeClasses[size]}`}
+        className={`inline-flex gap-0 font-mono ${sizeClasses[size]} ${className || ''}`}
         style={{ 
           color: `hsl(${theme.colors[effectiveColorMode].primary})`,
           letterSpacing: '-0.05em',  // Tighter spacing
@@ -229,7 +230,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   if (theme.name === 'sunset') {
     return (
       <div 
-        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]}`}
+        className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]} ${className || ''}`}
         style={{ 
           color: `hsl(${theme.colors[effectiveColorMode].primary})`,
           textShadow: effectiveColorMode === 'dark'
@@ -257,7 +258,7 @@ export function FlapDisplay({ value, size = 'medium' }: FlapDisplayProps) {
   // Default fallback display
   return (
     <div 
-      className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]}`}
+      className={`inline-flex gap-0.5 font-mono font-bold ${sizeClasses[size]} ${className || ''}`}
       style={{ color: `hsl(${theme.colors[effectiveColorMode].primary})` }}
     >
       {displayValue}

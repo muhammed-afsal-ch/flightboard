@@ -8,6 +8,7 @@ export const superThinTheme: Theme = {
   description: 'Ultra-compact terminal interface',
   typography: {
     fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Fira Code", monospace',
+    fontFamilyMono: '"SF Mono", "Monaco", "Inconsolata", "Fira Code", monospace',
     fontFamilyDisplay: '"SF Mono", "Monaco", "Inconsolata", monospace',
     fontSize: {
       xs: '0.625rem',   // 10px
@@ -21,18 +22,23 @@ export const superThinTheme: Theme = {
       '5xl': '1.5rem',   // 24px
     },
     fontWeight: {
+      light: '300',
       normal: '400',
       medium: '500',
       semibold: '500',  // Reduced from 600
       bold: '600',       // Reduced from 700
     },
     lineHeight: {
-      none: '1',
       tight: '1.1',      // Tighter than default
-      snug: '1.2',       // Tighter than default
       normal: '1.3',     // Tighter than default
       relaxed: '1.4',    // Tighter than default
-      loose: '1.5',      // Tighter than default
+    },
+    letterSpacing: {
+      tighter: '-0.05em',
+      tight: '-0.025em',
+      normal: '0',
+      wide: '0.025em',
+      wider: '0.05em',
     },
   },
   spacing: {
@@ -45,8 +51,6 @@ export const superThinTheme: Theme = {
       xl: '0.625rem',  // 10px
       '2xl': '0.75rem', // 12px
       '3xl': '1rem',    // 16px
-      '4xl': '1.25rem', // 20px
-      '5xl': '1.5rem',  // 24px
     },
   },
   borderRadius: {
@@ -55,8 +59,6 @@ export const superThinTheme: Theme = {
     md: '0.125rem',   // 2px
     lg: '0.1875rem',  // 3px
     xl: '0.25rem',    // 4px
-    '2xl': '0.375rem', // 6px
-    '3xl': '0.5rem',   // 8px
     full: '9999px',
   },
   shadows: {
@@ -65,7 +67,6 @@ export const superThinTheme: Theme = {
     md: 'none',
     lg: 'none',
     xl: 'none',
-    '2xl': 'none',
     inner: 'none',
     flap: 'none',
   },
