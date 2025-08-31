@@ -1,6 +1,6 @@
 {
   "name": "flightboard",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": false,
   "bin": {
     "flightboard-tui": "./bin/flightboard-tui",
