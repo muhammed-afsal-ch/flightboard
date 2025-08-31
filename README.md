@@ -1,8 +1,8 @@
 # FlightBoard
 
-![CI](https://github.com/airframes/flightboard/workflows/CI/badge.svg)
-![Docker Publish](https://github.com/airframes/flightboard/workflows/Docker%20Publish/badge.svg)
-![Docker Image](https://ghcr-badge.egpl.dev/airframes/flightboard/latest_tag?label=docker%20image)
+[![CI](https://github.com/airframes/flightboard/actions/workflows/ci.yml/badge.svg)](https://github.com/airframes/flightboard/actions/workflows/ci.yml)
+[![Docker Publish](https://github.com/airframes/flightboard/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/airframes/flightboard/actions/workflows/docker-publish.yml)
+[![Docker Image Version](https://img.shields.io/docker/v/airframes/flightboard?sort=semver&label=docker)](https://github.com/airframes/flightboard/pkgs/container/flightboard)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 ![TypeScript](https://img.shields.io/badge/typescript-%5E5.0.0-blue)
 ![Next.js](https://img.shields.io/badge/next.js-15.5.2-black)
