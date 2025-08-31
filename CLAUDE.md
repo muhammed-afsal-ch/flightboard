@@ -9,6 +9,37 @@ FlightBoard is a dual-interface flight information display system with:
 - **CLI Tools**: Three command-line utilities (TUI, web server, flight lookup)
 - **Multi-Provider Support**: Aggregates data from 8+ flight APIs with intelligent fallback
 
+## CRITICAL: Validation Checklist
+
+**IMPORTANT**: Run these commands after EVERY code change to ensure nothing breaks:
+
+```bash
+# 1. Linting (warnings are OK, errors are not)
+npm run lint
+
+# 2. TypeScript Type Checking (must pass)
+npm run typecheck
+
+# 3. Unit & Integration Tests (must pass)
+npm test
+
+# 4. Build Next.js & CLI (must complete successfully)
+npm run build
+
+# 5. Docker Build (must complete successfully)
+docker build -t flightboard:test .
+
+# 6. E2E Tests (run if UI changes were made)
+npm run test:e2e
+```
+
+**Quick validation command** (run all checks):
+```bash
+npm run lint && npm run typecheck && npm test && npm run build && docker build -t flightboard:test .
+```
+
+If any of these fail, fix the issues before committing or proceeding.
+
 ## Essential Commands
 
 ### Development
@@ -80,6 +111,8 @@ The system uses a **provider aggregation pattern** with automatic fallback:
    - Each implements `FlightProvider` interface
    - Located in `src/lib/flight-providers.ts`
    - Examples: `AirframesProvider`, `FlightAwareProvider`, `AdsbLolProvider`
+   - **FlightAware**: Uses AeroAPI v4 with `/airports/{code}/flights/departures` endpoints
+   - **FlightRadar24**: Supports commercial API with flexible endpoint structure
 
 3. **Route Enrichment**:
    - `enrichFlightWithRoute()` automatically fetches missing airport details
@@ -152,3 +185,23 @@ GitHub Actions workflows (`.github/workflows/`):
 7. **ESLint Configuration**: Uses ESLint v9 flat config (`eslint.config.mjs`), warnings don't fail CI
 
 8. **Playwright Configuration**: E2E tests run against dev server, multiple browser targets configured
+
+## Code Quality Standards
+
+### Before Making ANY Changes
+1. **Always validate**: Run the validation checklist after every significant change
+2. **Never skip tests**: All tests must pass before considering work complete
+3. **Build verification**: Both npm and Docker builds must succeed
+4. **Lint warnings**: While warnings are acceptable, aim to minimize them
+5. **Type safety**: TypeScript compilation must pass without errors
+
+### Common Issues to Avoid
+- Breaking the build by not testing TypeScript compilation
+- Introducing linting errors (warnings are OK, errors are not)
+- Forgetting to test Docker build after dependency changes
+- Not running tests after modifying business logic
+- Skipping E2E tests after UI changes
+
+### Remember
+**Quality over speed**: It's better to take time validating than to break the build.
+Always run the full validation checklist before declaring any task complete.

@@ -397,14 +397,22 @@ export class FlightRadar24Provider implements FlightDataProvider {
 
   private transformFlightRadar24Data(data: any[], type: 'departure' | 'arrival'): Flight[] {
     return data.map(flight => ({
-      id: `${flight.flight_id || flight.reg}-${Date.now()}`,
-      flightNumber: flight.flight || 'N/A',
-      airline: flight.airline || 'Unknown',
-      destination: type === 'departure' ? flight.dest_name : flight.orig_name,
-      destinationCode: type === 'departure' ? flight.dest : flight.orig,
-      origin: type === 'arrival' ? flight.orig_name : flight.dest_name,
-      originCode: type === 'arrival' ? flight.orig : flight.dest,
-      scheduledTime: new Date((flight.scheduled_time || flight.sched_time) * 1000),
+      id: `${flight.flight_id || flight.reg || Math.random()}-${Date.now()}`,
+      flightNumber: flight.flight || flight.flight_number || 'N/A',
+      airline: flight.airline || flight.airline_name || 'Unknown',
+      destination: type === 'departure' 
+        ? (flight.dest_name || flight.destination_airport_name || 'Unknown')
+        : (flight.orig_name || flight.origin_airport_name || 'Unknown'),
+      destinationCode: type === 'departure' 
+        ? (flight.dest || flight.destination_airport || 'UNK')
+        : (flight.orig || flight.origin_airport || 'UNK'),
+      origin: type === 'arrival' 
+        ? (flight.orig_name || flight.origin_airport_name || 'Unknown')
+        : (flight.dest_name || flight.destination_airport_name || 'Unknown'),
+      originCode: type === 'arrival' 
+        ? (flight.orig || flight.origin_airport || 'UNK')
+        : (flight.dest || flight.destination_airport || 'UNK'),
+      scheduledTime: new Date((flight.scheduled_time || flight.sched_time || Date.now() / 1000) * 1000),
       estimatedTime: flight.estimated_time 
         ? new Date(flight.estimated_time * 1000) 
         : undefined,
@@ -413,26 +421,34 @@ export class FlightRadar24Provider implements FlightDataProvider {
         : undefined,
       gate: flight.gate || '',
       terminal: flight.terminal,
-      status: this.mapFlightRadar24Status(flight.status),
-      aircraft: flight.aircraft || flight.aircraft_type,
+      status: this.mapFlightRadar24Status(flight.status || flight.flight_status || 'scheduled'),
+      aircraft: flight.aircraft || flight.aircraft_type || undefined,
       duration: undefined
     }));
   }
 
   private mapFlightRadar24Status(status: string): FlightStatus {
+    if (!status) return 'scheduled';
+    
+    const statusLower = status.toLowerCase();
     const statusMap: Record<string, FlightStatus> = {
       'scheduled': 'scheduled',
-      'boarding': 'boarding',
+      'estimated': 'scheduled',
+      'delayed': 'delayed',
       'departed': 'departed',
+      'active': 'departed',
+      'en route': 'departed',
       'airborne': 'departed',
-      'landing': 'arriving',
       'landed': 'landed',
       'arrived': 'landed',
       'cancelled': 'cancelled',
-      'delayed': 'delayed'
+      'canceled': 'cancelled',
+      'diverted': 'delayed',
+      'approaching': 'arriving',
+      'landing': 'arriving',
+      'boarding': 'boarding'
     };
-    
-    return statusMap[status?.toLowerCase()] || 'scheduled';
+    return statusMap[statusLower] || 'scheduled';
   }
 
   async fetchAirportInfo(code: string): Promise<Airport | null> {
