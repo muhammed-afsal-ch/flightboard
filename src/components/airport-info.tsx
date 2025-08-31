@@ -71,32 +71,32 @@ export function AirportInfo({ airportCode, currentTime }: AirportInfoProps) {
   return (
     <div className="text-center space-y-4 mb-8">
       <div className="space-y-2">
-        <h1 className="text-5xl font-bold text-yellow-500 font-mono tracking-wider">
+        <h1 className="text-5xl font-bold font-mono tracking-wider" style={{ color: 'hsl(var(--primary))' }}>
           <FlapDisplay value={airportCode.padEnd(4, ' ')} size="large" />
         </h1>
         
         {airportInfo && !loading && (
           <div className="space-y-1">
-            <h2 className="text-2xl text-yellow-400 font-semibold">
+            <h2 className="text-2xl font-semibold" style={{ color: 'hsl(var(--primary))' }}>
               {airportInfo.name}
             </h2>
-            <p className="text-lg text-gray-400">
+            <p className="text-lg" style={{ color: 'hsl(var(--muted-foreground))' }}>
               {airportInfo.city}, {airportInfo.country}
             </p>
           </div>
         )}
       </div>
 
-      <div className="flex justify-center gap-8 text-gray-400 font-mono">
+      <div className="flex justify-center gap-8 font-mono" style={{ color: 'hsl(var(--muted-foreground))' }}>
         <div>
-          <span className="text-xs text-gray-600 block">LOCAL TIME</span>
-          <span className="text-xl text-yellow-500">
+          <span className="text-xs block" style={{ color: 'hsl(var(--muted-foreground))' }}>LOCAL TIME</span>
+          <span className="text-xl" style={{ color: 'hsl(var(--primary))' }}>
             {airportInfo ? formatLocalTime(currentTime, airportInfo.timezone) : '--:--:--'}
           </span>
         </div>
         <div>
-          <span className="text-xs text-gray-600 block">UTC TIME</span>
-          <span className="text-xl text-gray-300">
+          <span className="text-xs block" style={{ color: 'hsl(var(--muted-foreground))' }}>UTC TIME</span>
+          <span className="text-xl" style={{ color: 'hsl(var(--foreground))' }}>
             {currentTime.toLocaleString('en-US', { 
               timeZone: 'UTC',
               hour: '2-digit',
@@ -109,9 +109,9 @@ export function AirportInfo({ airportCode, currentTime }: AirportInfoProps) {
       </div>
 
       {weather && (
-        <div className="mt-4 p-3 bg-gray-900 rounded-lg border border-gray-800 max-w-2xl mx-auto">
-          <span className="text-xs text-gray-500 block mb-1">WEATHER / METAR</span>
-          <p className="text-sm text-gray-300 font-mono">
+        <div className="mt-4 p-3 rounded-lg border max-w-2xl mx-auto" style={{ backgroundColor: 'hsl(var(--muted))', borderColor: 'hsl(var(--border))' }}>
+          <span className="text-xs block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>WEATHER / METAR</span>
+          <p className="text-sm font-mono" style={{ color: 'hsl(var(--foreground))' }}>
             {typeof weather === 'string' ? weather : JSON.stringify(weather)}
           </p>
         </div>

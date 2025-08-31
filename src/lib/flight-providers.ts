@@ -194,8 +194,8 @@ export class AirframesProvider implements FlightDataProvider {
         (flight.departureTimeActual ? new Date(flight.departureTimeActual) : undefined) :
         (flight.arrivalTimeActual ? new Date(flight.arrivalTimeActual) : undefined),
       gate: type === 'departure' ? 
-        (flight.departureGateActual || flight.departureGateScheduled || 'N/A') :
-        (flight.arrivalGateActual || flight.arrivalGateScheduled || 'N/A'),
+        (flight.departureGateActual || flight.departureGateScheduled || '') :
+        (flight.arrivalGateActual || flight.arrivalGateScheduled || ''),
       terminal: undefined,
       status: this.mapAirframesStatus(flight.status),
       aircraft: flight.airframe?.icaoType || flight.airframe?.description,
@@ -411,7 +411,7 @@ export class FlightRadar24Provider implements FlightDataProvider {
       actualTime: flight.actual_time
         ? new Date(flight.actual_time * 1000)
         : undefined,
-      gate: flight.gate || 'N/A',
+      gate: flight.gate || '',
       terminal: flight.terminal,
       status: this.mapFlightRadar24Status(flight.status),
       aircraft: flight.aircraft || flight.aircraft_type,
@@ -493,7 +493,7 @@ export class AirNavProvider implements FlightDataProvider {
       actualTime: flight.actual_departure || flight.actual_arrival
         ? new Date(flight.actual_departure || flight.actual_arrival)
         : undefined,
-      gate: flight.gate || 'N/A',
+      gate: flight.gate || '',
       terminal: flight.terminal,
       status: this.mapAirNavStatus(flight.status),
       aircraft: flight.aircraft_type,
@@ -632,7 +632,7 @@ export class AdsbImProvider implements FlightDataProvider {
       scheduledTime: data.scheduled ? new Date(data.scheduled) : new Date(),
       estimatedTime: data.estimated ? new Date(data.estimated) : undefined,
       actualTime: data.actual ? new Date(data.actual) : undefined,
-      gate: data.gate || 'N/A',
+      gate: data.gate || '',
       terminal: data.terminal,
       status: this.mapAdsbImStatus(data.status),
       aircraft: data.aircraft || data.type,
@@ -767,14 +767,14 @@ export class AdsbLolProvider implements FlightDataProvider {
       id: `${aircraft.hex}-${Date.now()}`,
       flightNumber: callsign,
       airline: this.extractAirlineFromCallsign(callsign),
-      destination: type === 'departure' ? 'En Route' : airport,
+      destination: type === 'departure' ? '' : airport,
       destinationCode: type === 'departure' ? 'ENR' : airport,
-      origin: type === 'arrival' ? 'En Route' : airport,
+      origin: type === 'arrival' ? '' : airport,
       originCode: type === 'arrival' ? 'ENR' : airport,
       scheduledTime: new Date(),
       estimatedTime: undefined,
       actualTime: undefined,
-      gate: 'N/A',
+      gate: '',
       terminal: undefined,
       status: this.determineStatus(aircraft, type),
       aircraft: aircraft.t || 'Unknown'

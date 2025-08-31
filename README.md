@@ -26,11 +26,14 @@ A dual-interface flight information display system featuring both a modern web U
 ## Features
 
 - **Web Interface**: Modern Next.js 15 application with photorealistic split-flap display animations
+- **Multiple Themes**: 7 unique themes including Airport Classic, Modern, Minimalist, Retro Terminal, High Contrast, Matrix (with animated digital rain), and Super Thin
+- **Theme Persistence**: User preferences saved in browser localStorage with light/dark/system mode support
 - **Terminal UI**: Blessed-based TUI for command-line flight monitoring
 - **Real-time Updates**: Auto-refreshing flight data with dynamic status changes
 - **Multiple Data Providers**: Support for 8+ flight data APIs with intelligent fallback
 - **Automatic Route Enrichment**: Missing flight details are automatically fetched from route providers
 - **Airport Information**: Detailed airport data including location, timezone, and local time
+- **Enhanced Display**: ICAO codes shown with city names, "????" for en-route flights, proper sorting by time and status
 - **Global CLI Tools**: Three installable command-line utilities for different use cases
 - **Production Docker Support**: Multi-stage builds with Next.js standalone output
 - **Complete CI/CD Pipeline**: Automated testing, Docker builds, and GHCR publishing
@@ -99,6 +102,35 @@ docker run -p 3000:3000 --env-file .env.local flightboard:latest
 npm install -g flightboard
 ```
 
+## Themes
+
+FlightBoard includes 7 beautifully crafted themes, each with light and dark mode support:
+
+1. **Airport Classic** - Traditional split-flap board aesthetic with mechanical animations
+2. **Modern** - Clean, contemporary design with smooth animations
+3. **Minimalist** - Focus on content with subtle design elements
+4. **Retro Terminal** - Green phosphor CRT terminal style
+5. **High Contrast** - Maximum readability with stark contrasts
+6. **Matrix** - Cyberpunk theme with animated digital rain background featuring golden airplane symbols
+7. **Super Thin** - Ultra-compact terminal style with minimal spacing
+
+### Theme Configuration
+
+Set available themes via environment variable:
+
+```bash
+# In .env.local
+AVAILABLE_THEMES=airport,modern,minimalist,retro,highcontrast,matrix,superthin
+
+# Or use a subset
+AVAILABLE_THEMES=airport,modern,matrix
+```
+
+Themes remember user preferences in browser localStorage including:
+- Selected theme
+- Light/dark/system color mode
+- Automatic theme application on page load
+
 ## Usage
 
 ### Command Line Tools
@@ -116,6 +148,15 @@ npm run flightboard-web
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+**Web Interface Features:**
+- Theme selector dropdown with live preview
+- Light/dark/system mode toggle
+- Responsive split-flap displays
+- Real-time clock showing local, airport, and UTC time
+- Tabbed interface for departures and arrivals
+- Flight status badges with appropriate colors
+- Automatic sorting by time and status (active flights first)
 
 #### `flightboard-tui` - Terminal UI
 
@@ -205,9 +246,10 @@ cp env.example .env.local
    - Requires paid subscription
 
 3. **AviationStack**
-   - Sign up: [aviationstack.com](https://aviationstack.com/signup/free)
+   - Sign up: [Get your API key here](https://apilayer.com?fpr=kevin31&fp_sid=flightbo) *
    - Free tier: 100 requests/month
    - `AVIATIONSTACK_API_KEY=your_key`
+   - \* *Affiliate link - helps support FlightBoard development*
 
 4. **FlightRadar24**
    - Commercial service: [flightradar24.com](https://www.flightradar24.com/commercial-services/data-feeds)
@@ -416,8 +458,10 @@ flightboard/
 
 - **Next.js 15**: React framework with App Router
 - **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first styling
+- **Tailwind CSS**: Utility-first styling with CSS variables for theming
 - **shadcn/ui**: High-quality UI components
+- **React Context API**: Theme state management
+- **Canvas API**: Matrix rain animation
 - **Blessed**: Terminal UI library
 - **Commander**: CLI argument parsing
 - **Chalk**: Terminal string styling
@@ -485,6 +529,16 @@ If you encounter TypeScript compilation errors during Docker builds:
 If the default port 3000 is in use:
 - Change the port in Docker: `docker run -p 3001:3000 ...`
 - For development: `PORT=3001 npm run dev`
+
+## Support the Project
+
+FlightBoard is open source and free to use. If you find it useful, consider:
+- Using our affiliate links when signing up for API services (marked with \*)
+- Contributing code or documentation
+- Reporting bugs and suggesting features
+- Sharing the project with others
+
+Affiliate commissions help us maintain and improve FlightBoard. Thank you for your support!
 
 ## Acknowledgments
 

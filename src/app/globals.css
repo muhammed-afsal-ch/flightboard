@@ -120,3 +120,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Flap display status colors for Airport Classic theme */
+.flap-boarding {
+  color: hsl(var(--flight-boarding)) !important;
+}
+
+.flap-departed {
+  color: hsl(var(--flight-departed)) !important;
+}
+
+.flap-arriving {
+  color: hsl(var(--flight-arriving)) !important;
+}
+
+.flap-landed {
+  color: hsl(var(--flight-arrived)) !important;
+}
+
+.flap-delayed {
+  color: hsl(var(--flight-delayed)) !important;
+}
+
+.flap-cancelled {
+  color: hsl(var(--flight-cancelled)) !important;
+}
