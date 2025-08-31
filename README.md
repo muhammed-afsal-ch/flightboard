@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/airframesio/flightboard/actions/workflows/ci.yml/badge.svg)](https://github.com/airframesio/flightboard/actions/workflows/ci.yml)
 [![Docker Publish](https://github.com/airframesio/flightboard/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/airframesio/flightboard/actions/workflows/docker-publish.yml)
-[![Docker Image Version](https://img.shields.io/docker/v/airframesio/flightboard?sort=semver&label=docker)](https://github.com/airframesio/flightboard/pkgs/container/flightboard)
+[![Docker Image](https://img.shields.io/badge/docker-ghcr.io-blue?logo=docker&logoColor=white)](https://github.com/airframesio/flightboard/pkgs/container/flightboard)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 ![TypeScript](https://img.shields.io/badge/typescript-%5E5.0.0-blue)
 ![Next.js](https://img.shields.io/badge/next.js-15.5.2-black)
@@ -236,9 +236,10 @@ cp env.example .env.local
 ### Supported Providers
 
 1. **Airframes.io** (PRIORITY - Our service!)
-   - Contact: api@airframes.io for access
+   - Get API key: [app.airframes.io/user/dashboard](https://app.airframes.io/user/dashboard) - click API Key button
+   - Free for all feeders, Patreons, and paid Discord supporters
    - `AIRFRAMES_API_KEY=your_key`
-   - Note: Airport-specific endpoints coming soon
+   - Note: Paid API tiers coming in the future
 
 2. **FlightAware AeroAPI**
    - Sign up: [flightaware.com/commercial/aeroapi](https://flightaware.com/commercial/aeroapi/)
